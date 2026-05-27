@@ -1,0 +1,73 @@
+# Перевірте, що всі папки існують
+Test-Path "C:\WPLaunch\core"
+Test-Path "C:\WPLaunch\config"
+Test-Path "C:\WPLaunch\data"
+Test-Path "C:\WPLaunch\template"
+Test-Path "C:\WPLaunch\www"
+
+# Перевірте, що Inno Setup встановлено
+Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+
+--------------------------------------------------------------
+
+
+# Крок 0: Зупинити всі процеси (ВАЖЛИВО!)
+Write-Host "Зупиняємо сервер..." -ForegroundColor Yellow
+taskkill /F /IM nginx.exe 2>$null
+taskkill /F /IM php-cgi.exe 2>$null
+taskkill /F /IM mysqld.exe 2>$null
+Start-Sleep -Seconds 2
+
+# Крок 1: Перехід у папку проєкту (назва папки залишилась WPLaunchGUI)
+cd "C:\WPronto\src\WPLaunchGUI"
+
+# Крок 2: Компіляція
+dotnet build -c Release
+
+# Крок 3: Публікація (створює WProntoGUI.exe завдяки налаштуванням проекту)
+dotnet publish -c Release -o "C:\WPronto\publish"
+
+# Крок 4: Копіювання папок з сервером
+$folders = @("core", "config", "data", "template", "www")
+foreach ($folder in $folders) {
+    Copy-Item -Path "C:\WPronto\$folder" -Destination "C:\WPronto\publish\" -Recurse -Force
+}
+
+# Крок 5: Копіювання текстових файлів
+Copy-Item -Path "C:\WPronto\about.txt" -Destination "C:\WPronto\publish\" -Force
+Copy-Item -Path "C:\WPronto\license.txt" -Destination "C:\WPronto\publish\" -Force
+
+# Крок 6: Створення інсталятора
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "C:\WPronto\installer_final.iss"
+
+Write-Host "✅ Готово!" -ForegroundColor Green
+
+-------------------------------------------
+
+якщо виникає помилка
+
+Error in C:\WPLaunch\installer_final.iss: The process cannot access the file because it is being used by another process.
+Compile aborted.
+
+Зупиніть всі процеси WPLaunch
+
+taskkill /f /im WPLaunchGUI.exe 2>$null
+taskkill /f /im nginx.exe 2>$null
+taskkill /f /im php-cgi.exe 2>$null
+taskkill /f /im mysqld.exe 2>$null
+
+Переконайтеся, що процесів немає
+
+Get-Process -Name WPLaunchGUI, nginx, php-cgi, mysqld -ErrorAction SilentlyContinue
+
+якщо є
+
+Запустіть PowerShell від імені адміністратора
+
+taskkill /f /im mysqld.exe
+
+Перевірте, що всі процеси зупинені
+
+Get-Process -Name nginx, php-cgi, mysqld -ErrorAction SilentlyContinue
+
+якщо все норм то можна збирати проект
