@@ -1,0 +1,37 @@
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    
+    sendfile        on;
+    keepalive_timeout  65;
+    
+    access_log  C:/WPLaunch/logs/nginx_access.log;
+    error_log   C:/WPLaunch/logs/nginx_error.log;
+    
+    server {
+        listen       80;
+        server_name  localhost;
+        
+        root   C:/WPLaunch/www/default;
+        index  index.php index.html;
+        
+        location / {
+            try_files $uri $uri/ /index.php?$args;
+        }
+        
+        location ~ \.php$ {
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+            include        fastcgi_params;
+        }
+    }
+    
+    include C:/WPLaunch/config/nginx/sites/*.conf;
+}
