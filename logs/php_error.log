@@ -1,0 +1,320 @@
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_users' already exists for query CREATE TABLE wp_users (
+	ID bigint(20) unsigned NOT NULL auto_increment,
+	user_login varchar(60) NOT NULL default '',
+	user_pass varchar(255) NOT NULL default '',
+	user_nicename varchar(50) NOT NULL default '',
+	user_email varchar(100) NOT NULL default '',
+	user_url varchar(100) NOT NULL default '',
+	user_registered datetime NOT NULL default '0000-00-00 00:00:00',
+	user_activation_key varchar(255) NOT NULL default '',
+	user_status int(11) NOT NULL default '0',
+	display_name varchar(250) NOT NULL default '',
+	PRIMARY KEY  (ID),
+	KEY user_login_key (user_login),
+	KEY user_nicename (user_nicename),
+	KEY user_email (user_email)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_usermeta' already exists for query 
+CREATE TABLE wp_usermeta (
+	umeta_id bigint(20) unsigned NOT NULL auto_increment,
+	user_id bigint(20) unsigned NOT NULL default '0',
+	meta_key varchar(255) default NULL,
+	meta_value longtext,
+	PRIMARY KEY  (umeta_id),
+	KEY user_id (user_id),
+	KEY meta_key (meta_key(191))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_termmeta' already exists for query 
+CREATE TABLE wp_termmeta (
+	meta_id bigint(20) unsigned NOT NULL auto_increment,
+	term_id bigint(20) unsigned NOT NULL default '0',
+	meta_key varchar(255) default NULL,
+	meta_value longtext,
+	PRIMARY KEY  (meta_id),
+	KEY term_id (term_id),
+	KEY meta_key (meta_key(191))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_terms' already exists for query 
+CREATE TABLE wp_terms (
+ term_id bigint(20) unsigned NOT NULL auto_increment,
+ name varchar(200) NOT NULL default '',
+ slug varchar(200) NOT NULL default '',
+ term_group bigint(10) NOT NULL default 0,
+ PRIMARY KEY  (term_id),
+ KEY slug (slug(191)),
+ KEY name (name(191))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_term_taxonomy' already exists for query 
+CREATE TABLE wp_term_taxonomy (
+ term_taxonomy_id bigint(20) unsigned NOT NULL auto_increment,
+ term_id bigint(20) unsigned NOT NULL default 0,
+ taxonomy varchar(32) NOT NULL default '',
+ description longtext NOT NULL,
+ parent bigint(20) unsigned NOT NULL default 0,
+ count bigint(20) NOT NULL default 0,
+ PRIMARY KEY  (term_taxonomy_id),
+ UNIQUE KEY term_id_taxonomy (term_id,taxonomy),
+ KEY taxonomy (taxonomy)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_term_relationships' already exists for query 
+CREATE TABLE wp_term_relationships (
+ object_id bigint(20) unsigned NOT NULL default 0,
+ term_taxonomy_id bigint(20) unsigned NOT NULL default 0,
+ term_order int(11) NOT NULL default 0,
+ PRIMARY KEY  (object_id,term_taxonomy_id),
+ KEY term_taxonomy_id (term_taxonomy_id)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_commentmeta' already exists for query 
+CREATE TABLE wp_commentmeta (
+	meta_id bigint(20) unsigned NOT NULL auto_increment,
+	comment_id bigint(20) unsigned NOT NULL default '0',
+	meta_key varchar(255) default NULL,
+	meta_value longtext,
+	PRIMARY KEY  (meta_id),
+	KEY comment_id (comment_id),
+	KEY meta_key (meta_key(191))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_comments' already exists for query 
+CREATE TABLE wp_comments (
+	comment_ID bigint(20) unsigned NOT NULL auto_increment,
+	comment_post_ID bigint(20) unsigned NOT NULL default '0',
+	comment_author tinytext NOT NULL,
+	comment_author_email varchar(100) NOT NULL default '',
+	comment_author_url varchar(200) NOT NULL default '',
+	comment_author_IP varchar(100) NOT NULL default '',
+	comment_date datetime NOT NULL default '0000-00-00 00:00:00',
+	comment_date_gmt datetime NOT NULL default '0000-00-00 00:00:00',
+	comment_content text NOT NULL,
+	comment_karma int(11) NOT NULL default '0',
+	comment_approved varchar(20) NOT NULL default '1',
+	comment_agent varchar(255) NOT NULL default '',
+	comment_type varchar(20) NOT NULL default 'comment',
+	comment_parent bigint(20) unsigned NOT NULL default '0',
+	user_id bigint(20) unsigned NOT NULL default '0',
+	PRIMARY KEY  (comment_ID),
+	KEY comment_post_ID (comment_post_ID),
+	KEY comment_approved_date_gmt (comment_approved,comment_date_gmt),
+	KEY comment_date_gmt (comment_date_gmt),
+	KEY comment_parent (comment_parent),
+	KEY comment_author_email (comment_author_email(10))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_links' already exists for query 
+CREATE TABLE wp_links (
+	link_id bigint(20) unsigned NOT NULL auto_increment,
+	link_url varchar(255) NOT NULL default '',
+	link_name varchar(255) NOT NULL default '',
+	link_image varchar(255) NOT NULL default '',
+	link_target varchar(25) NOT NULL default '',
+	link_description varchar(255) NOT NULL default '',
+	link_visible varchar(20) NOT NULL default 'Y',
+	link_owner bigint(20) unsigned NOT NULL default '1',
+	link_rating int(11) NOT NULL default '0',
+	link_updated datetime NOT NULL default '0000-00-00 00:00:00',
+	link_rel varchar(255) NOT NULL default '',
+	link_notes mediumtext NOT NULL,
+	link_rss varchar(255) NOT NULL default '',
+	PRIMARY KEY  (link_id),
+	KEY link_visible (link_visible)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_options' already exists for query 
+CREATE TABLE wp_options (
+	option_id bigint(20) unsigned NOT NULL auto_increment,
+	option_name varchar(191) NOT NULL default '',
+	option_value longtext NOT NULL,
+	autoload varchar(20) NOT NULL default 'yes',
+	PRIMARY KEY  (option_id),
+	UNIQUE KEY option_name (option_name),
+	KEY autoload (autoload)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_postmeta' already exists for query 
+CREATE TABLE wp_postmeta (
+	meta_id bigint(20) unsigned NOT NULL auto_increment,
+	post_id bigint(20) unsigned NOT NULL default '0',
+	meta_key varchar(255) default NULL,
+	meta_value longtext,
+	PRIMARY KEY  (meta_id),
+	KEY post_id (post_id),
+	KEY meta_key (meta_key(191))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'wp_posts' already exists for query 
+CREATE TABLE wp_posts (
+	ID bigint(20) unsigned NOT NULL auto_increment,
+	post_author bigint(20) unsigned NOT NULL default '0',
+	post_date datetime NOT NULL default '0000-00-00 00:00:00',
+	post_date_gmt datetime NOT NULL default '0000-00-00 00:00:00',
+	post_content longtext NOT NULL,
+	post_title text NOT NULL,
+	post_excerpt text NOT NULL,
+	post_status varchar(20) NOT NULL default 'publish',
+	comment_status varchar(20) NOT NULL default 'open',
+	ping_status varchar(20) NOT NULL default 'open',
+	post_password varchar(255) NOT NULL default '',
+	post_name varchar(200) NOT NULL default '',
+	to_ping text NOT NULL,
+	pinged text NOT NULL,
+	post_modified datetime NOT NULL default '0000-00-00 00:00:00',
+	post_modified_gmt datetime NOT NULL default '0000-00-00 00:00:00',
+	post_content_filtered longtext NOT NULL,
+	post_parent bigint(20) unsigned NOT NULL default '0',
+	guid varchar(255) NOT NULL default '',
+	menu_order int(11) NOT NULL default '0',
+	post_type varchar(20) NOT NULL default 'post',
+	post_mime_type varchar(100) NOT NULL default '',
+	comment_count bigint(20) NOT NULL default '0',
+	PRIMARY KEY  (ID),
+	KEY post_name (post_name(191)),
+	KEY type_status_date (post_type,post_status,post_date,ID),
+	KEY post_parent (post_parent),
+	KEY post_author (post_author),
+	KEY type_status_author (post_type,post_status,post_author)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci made by wp_install, make_db_current_silent, dbDelta
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('cron', 'a:2:{i:1779398370;a:1:{s:16:\"wp_version_check\";a:1:{s:32:\"40cd750bba9870f18aada2478b24840a\";a:3:{s:8:\"schedule\";s:10:\"twicedaily\";s:4:\"args\";a:0:{}s:8:\"interval\";i:43200;}}}s:7:\"version\";i:2;}', 'on') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_schedule_event, _set_cron_array, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('cron', 'a:2:{i:1779400170;a:1:{s:17:\"wp_update_plugins\";a:1:{s:32:\"40cd750bba9870f18aada2478b24840a\";a:3:{s:8:\"schedule\";s:10:\"twicedaily\";s:4:\"args\";a:0:{}s:8:\"interval\";i:43200;}}}s:7:\"version\";i:2;}', 'on') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_schedule_event, _set_cron_array, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('cron', 'a:2:{i:1779401970;a:1:{s:16:\"wp_update_themes\";a:1:{s:32:\"40cd750bba9870f18aada2478b24840a\";a:3:{s:8:\"schedule\";s:10:\"twicedaily\";s:4:\"args\";a:0:{}s:8:\"interval\";i:43200;}}}s:7:\"version\";i:2;}', 'on') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_schedule_event, _set_cron_array, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT option_name FROM wp_options WHERE option_name in ( 'siteurl', 'home', 'blogname', 'blogdescription', 'users_can_register', 'admin_email', 'start_of_week', 'use_balanceTags', 'use_smilies', 'require_name_email', 'comments_notify', 'posts_per_rss', 'rss_use_excerpt', 'mailserver_url', 'mailserver_login', 'mailserver_pass', 'mailserver_port', 'default_category', 'default_comment_status', 'default_ping_status', 'default_pingback_flag', 'posts_per_page', 'date_format', 'time_format', 'links_updated_date_format', 'comment_moderation', 'moderation_notify', 'permalink_structure', 'rewrite_rules', 'hack_file', 'blog_charset', 'moderation_keys', 'active_plugins', 'category_base', 'ping_sites', 'comment_max_links', 'gmt_offset', 'default_email_category', 'recently_edited', 'template', 'stylesheet', 'comment_registration', 'html_type', 'use_trackback', 'default_role', 'db_version', 'uploads_use_yearmonth_folders', 'upload_path', 'blog_public', 'default_link_category', 'show_on_front', 'tag_base', 'show_avatars', 'avatar_rating', 'upload_url_path', 'thumbnail_size_w', 'thumbnail_size_h', 'thumbnail_crop', 'medium_size_w', 'medium_size_h', 'avatar_default', 'large_size_w', 'large_size_h', 'image_default_link_type', 'image_default_size', 'image_default_align', 'close_comments_for_old_posts', 'close_comments_days_old', 'thread_comments', 'thread_comments_depth', 'page_comments', 'comments_per_page', 'default_comments_page', 'comment_order', 'sticky_posts', 'widget_categories', 'widget_text', 'widget_rss', 'uninstall_plugins', 'timezone_string', 'page_for_posts', 'page_on_front', 'default_post_format', 'link_manager_enabled', 'finished_splitting_shared_terms', 'site_icon', 'medium_large_size_w', 'medium_large_size_h', 'wp_page_for_privacy_policy', 'show_comments_cookies_opt_in', 'admin_email_lifespan', 'disallowed_keys', 'comment_previously_approved', 'auto_plugin_theme_update_emails', 'auto_update_core_dev', 'auto_update_core_minor', 'auto_update_core_major', 'wp_force_deactivated_plugins', 'wp_attachment_pages_enabled', 'wp_notes_notify', 'initial_db_version' ) made by wp_install, populate_options
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, populate_options, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO wp_options (option_name, option_value, autoload) VALUES ('siteurl', '', 'on'), ('home', '', 'on'), ('blogname', '', 'on'), ('blogdescription', '', 'on'), ('users_can_register', '0', 'on'), ('admin_email', '', 'on'), ('start_of_week', '1', 'on'), ('use_balanceTags', '0', 'on'), ('use_smilies', '1', 'on'), ('require_name_email', '1', 'on'), ('comments_notify', '1', 'on'), ('posts_per_rss', '10', 'on'), ('rss_use_excerpt', '0', 'on'), ('mailserver_url', '', 'on'), ('mailserver_login', '', 'on'), ('mailserver_pass', '', 'on'), ('mailserver_port', '110', 'on'), ('default_category', '1', 'on'), ('default_comment_status', 'open', 'on'), ('default_ping_status', 'open', 'on'), ('default_pingback_flag', '1', 'on'), ('posts_per_page', '10', 'on'), ('date_format', '', 'on'), ('time_format', '', 'on'), ('links_updated_date_format', 'd.m.Y H:i', 'on'), ('comment_moderation', '0', 'on'), ('moderation_notify', '1', 'on'), ('permalink_structure', '', 'on'), ('rewrite_rules', '', 'on'), ('hack_file', '0', 'on'), ('blog_charset', 'UTF-8', 'on'), ('moderation_keys', '', 'off'), ('active_plugins', 'a:0:{}', 'on'), ('category_base', '', 'on'), ('ping_sites', 'https://rpc.pingomatic.com/', 'on'), ('comment_max_links', '2', 'on'), ('gmt_offset', '3', 'on'), ('default_email_category', '1', 'on'), ('recently_edited', '', 'off'), ('template', 'twentytwentyfive', 'on'), ('stylesheet', 'twentytwentyfive', 'on'), ('comment_registration', '0', 'on'), ('html_type', 'text/html', 'on'), ('use_trackback', '0', 'on'), ('default_role', 'subscriber', 'on'), ('db_version', '61833', 'on'), ('uploads_use_yearmonth_folders', '1', 'on'), ('upload_path', '', 'on'), ('blog_public', '1', 'on'), ('default_link_category', '2', 'on'), ('show_on_front', 'posts', 'on'), ('tag_base', '', 'on'), ('show_avatars', '1', 'on'), ('avatar_rating', 'G', 'on'), ('upload_url_path', '', 'on'), ('thumbnail_size_w', '150', 'on'), ('thumbnail_size_h', '150', 'on'), ('thumbnail_crop', '1', 'on'), ('medium_size_w', '300', 'on'), ('medium_size_h', '300', 'on'), ('avatar_default', 'mystery', 'on'), ('large_size_w', '1024', 'on'), ('large_size_h', '1024', 'on'), ('image_default_link_type', 'none', 'on'), ('image_default_size', '', 'on'), ('image_default_align', '', 'on'), ('close_comments_for_old_posts', '0', 'on'), ('close_comments_days_old', '14', 'on'), ('thread_comments', '1', 'on'), ('thread_comments_depth', '5', 'on'), ('page_comments', '0', 'on'), ('comments_per_page', '50', 'on'), ('default_comments_page', 'newest', 'on'), ('comment_order', 'asc', 'on'), ('sticky_posts', 'a:0:{}', 'on'), ('widget_categories', 'a:0:{}', 'on'), ('widget_text', 'a:0:{}', 'on'), ('widget_rss', 'a:0:{}', 'on'), ('uninstall_plugins', 'a:0:{}', 'off'), ('timezone_string', '', 'on'), ('page_for_posts', '0', 'on'), ('page_on_front', '0', 'on'), ('default_post_format', '0', 'on'), ('link_manager_enabled', '0', 'on'), ('finished_splitting_shared_terms', '1', 'on'), ('site_icon', '0', 'on'), ('medium_large_size_w', '768', 'on'), ('medium_large_size_h', '0', 'on'), ('wp_page_for_privacy_policy', '0', 'on'), ('show_comments_cookies_opt_in', '1', 'on'), ('admin_email_lifespan', '1794946770', 'on'), ('disallowed_keys', '', 'off'), ('comment_previously_approved', '1', 'on'), ('auto_plugin_theme_update_emails', 'a:0:{}', 'off'), ('auto_update_core_dev', 'enabled', 'on'), ('auto_update_core_minor', 'enabled', 'on'), ('auto_update_core_major', 'enabled', 'on'), ('wp_force_deactivated_plugins', 'a:0:{}', 'on'), ('wp_attachment_pages_enabled', '0', 'on'), ('wp_notes_notify', '1', 'on'), ('initial_db_version', '61833', 'on') made by wp_install, populate_options
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'blodotgsping_url' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'bodyterminator' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'emailtestonly' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'phoneemail_separator' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'smilies_directory' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'subjectprefix' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_bbcode' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_blodotgsping' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_phoneemail' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_quicktags' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_weblogsping' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'weblogs_cache_file' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_preview' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_htmltrans' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'smilies_directory' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'fileupload_allowedusers' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_phoneemail' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'default_post_status' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'default_post_category' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'archive_mode' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'time_difference' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_minadminlevel' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_use_adminlevels' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_type' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_char' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_ignore_zero' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_single_image' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image0' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image1' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image2' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image3' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image4' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image5' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image6' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image7' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image8' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_rating_image9' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_recently_updated_time' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_recently_updated_prepend' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'links_recently_updated_append' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'weblogs_cacheminutes' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'comment_allowed_tags' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'search_engine_friendly_urls' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'default_geourl_lat' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'default_geourl_lon' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_default_geourl' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'weblogs_xml_url' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'new_users_can_blog' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = '_wpnonce' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = '_wp_http_referer' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'Update' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'action' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'rich_editing' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'autosave_interval' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'deactivated_plugins' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'can_compress_scripts' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'page_uris' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'update_core' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'update_plugins' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'update_themes' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'doing_cron' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'random_seed' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'rss_excerpt_length' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'secret' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'use_linksupdate' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'default_comment_status_page' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'wporg_popular_tags' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'what_to_show' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'rss_language' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'language' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'enable_xmlrpc' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'enable_app' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'embed_autourls' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'default_post_edit_rows' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'gzipcompression' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SELECT autoload FROM wp_options WHERE option_name = 'advanced_edit' made by wp_install, populate_options, delete_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query DELETE FROM wp_options WHERE option_name REGEXP '^rss_[0-9a-f]{32}(_ts)?$' made by wp_install, populate_options
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query DELETE a, b FROM wp_options a, wp_options b
+			WHERE a.option_name LIKE '\\_transient\\_%'
+			AND a.option_name NOT LIKE '\\_transient\\_timeout\\_%'
+			AND b.option_name = CONCAT( '_transient_timeout_', SUBSTRING( a.option_name, 12 ) )
+			AND b.option_value < 1779394770 made by wp_install, populate_options, delete_expired_transients
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query DELETE a, b FROM wp_options a, wp_options b
+				WHERE a.option_name LIKE '\\_site\\_transient\\_%'
+				AND a.option_name NOT LIKE '\\_site\\_transient\\_timeout\\_%'
+				AND b.option_name = CONCAT( '_site_transient_timeout_', SUBSTRING( a.option_name, 17 ) )
+				AND b.option_value < 1779394770 made by wp_install, populate_options, delete_expired_transients
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('wp_user_roles', 'a:5:{s:13:\"administrator\";a:2:{s:4:\"name\";s:13:\"Administrator\";s:12:\"capabilities\";a:61:{s:13:\"switch_themes\";b:1;s:11:\"edit_themes\";b:1;s:16:\"activate_plugins\";b:1;s:12:\"edit_plugins\";b:1;s:10:\"edit_users\";b:1;s:10:\"edit_files\";b:1;s:14:\"manage_options\";b:1;s:17:\"moderate_comments\";b:1;s:17:\"manage_categories\";b:1;s:12:\"manage_links\";b:1;s:12:\"upload_files\";b:1;s:6:\"import\";b:1;s:15:\"unfiltered_html\";b:1;s:10:\"edit_posts\";b:1;s:17:\"edit_others_posts\";b:1;s:20:\"edit_published_posts\";b:1;s:13:\"publish_posts\";b:1;s:10:\"edit_pages\";b:1;s:4:\"read\";b:1;s:8:\"level_10\";b:1;s:7:\"level_9\";b:1;s:7:\"level_8\";b:1;s:7:\"level_7\";b:1;s:7:\"level_6\";b:1;s:7:\"level_5\";b:1;s:7:\"level_4\";b:1;s:7:\"level_3\";b:1;s:7:\"level_2\";b:1;s:7:\"level_1\";b:1;s:7:\"level_0\";b:1;s:17:\"edit_others_pages\";b:1;s:20:\"edit_published_pages\";b:1;s:13:\"publish_pages\";b:1;s:12:\"delete_pages\";b:1;s:19:\"delete_others_pages\";b:1;s:22:\"delete_published_pages\";b:1;s:12:\"delete_posts\";b:1;s:19:\"delete_others_posts\";b:1;s:22:\"delete_published_posts\";b:1;s:20:\"delete_private_posts\";b:1;s:18:\"edit_private_posts\";b:1;s:18:\"read_private_posts\";b:1;s:20:\"delete_private_pages\";b:1;s:18:\"edit_private_pages\";b:1;s:18:\"read_private_pages\";b:1;s:12:\"delete_users\";b:1;s:12:\"create_users\";b:1;s:17:\"unfiltered_upload\";b:1;s:14:\"edit_dashboard\";b:1;s:14:\"update_plugins\";b:1;s:14:\"delete_plugins\";b:1;s:15:\"install_plugins\";b:1;s:13:\"update_themes\";b:1;s:14:\"install_themes\";b:1;s:11:\"update_core\";b:1;s:10:\"list_users\";b:1;s:12:\"remove_users\";b:1;s:13:\"promote_users\";b:1;s:18:\"edit_theme_options\";b:1;s:13:\"delete_themes\";b:1;s:6:\"export\";b:1;}}s:6:\"editor\";a:2:{s:4:\"name\";s:6:\"Editor\";s:12:\"capabilities\";a:34:{s:17:\"moderate_comments\";b:1;s:17:\"manage_categories\";b:1;s:12:\"manage_links\";b:1;s:12:\"upload_files\";b:1;s:15:\"unfiltered_html\";b:1;s:10:\"edit_posts\";b:1;s:17:\"edit_others_posts\";b:1;s:20:\"edit_published_posts\";b:1;s:13:\"publish_posts\";b:1;s:10:\"edit_pages\";b:1;s:4:\"read\";b:1;s:7:\"level_7\";b:1;s:7:\"level_6\";b:1;s:7:\"level_5\";b:1;s:7:\"level_4\";b:1;s:7:\"level_3\";b:1;s:7:\"level_2\";b:1;s:7:\"level_1\";b:1;s:7:\"level_0\";b:1;s:17:\"edit_others_pages\";b:1;s:20:\"edit_published_pages\";b:1;s:13:\"publish_pages\";b:1;s:12:\"delete_pages\";b:1;s:19:\"delete_others_pages\";b:1;s:22:\"delete_published_pages\";b:1;s:12:\"delete_posts\";b:1;s:19:\"delete_others_posts\";b:1;s:22:\"delete_published_posts\";b:1;s:20:\"delete_private_posts\";b:1;s:18:\"edit_private_posts\";b:1;s:18:\"read_private_posts\";b:1;s:20:\"delete_private_pages\";b:1;s:18:\"edit_private_pages\";b:1;s:18:\"read_private_pages\";b:1;}}s:6:\"author\";a:2:{s:4:\"name\";s:6:\"Author\";s:12:\"capabilities\";a:10:{s:12:\"upload_files\";b:1;s:10:\"edit_posts\";b:1;s:20:\"edit_published_posts\";b:1;s:13:\"publish_posts\";b:1;s:4:\"read\";b:1;s:7:\"level_2\";b:1;s:7:\"level_1\";b:1;s:7:\"level_0\";b:1;s:12:\"delete_posts\";b:1;s:22:\"delete_published_posts\";b:1;}}s:11:\"contributor\";a:2:{s:4:\"name\";s:11:\"Contributor\";s:12:\"capabilities\";a:5:{s:10:\"edit_posts\";b:1;s:4:\"read\";b:1;s:7:\"level_1\";b:1;s:7:\"level_0\";b:1;s:12:\"delete_posts\";b:1;}}s:10:\"subscriber\";a:2:{s:4:\"name\";s:10:\"Subscriber\";s:12:\"capabilities\";a:2:{s:4:\"read\";b:1;s:7:\"level_0\";b:1;}}}', 'on') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, populate_roles, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('blog_public', '1', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('fresh_site', '1', 'off') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('WPLANG', 'ru_RU', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_users' doesn't exist in engine for query SELECT * FROM wp_users WHERE user_login = 'admin' LIMIT 1 made by wp_install, username_exists, get_user_by, WP_User::get_data_by
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_users' doesn't exist in engine for query SELECT * FROM wp_users WHERE user_login = 'admin' LIMIT 1 made by wp_install, wp_create_user, wp_insert_user, username_exists, get_user_by, WP_User::get_data_by
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_users' doesn't exist in engine for query SELECT ID FROM wp_users WHERE user_nicename = 'admin' AND user_login != 'admin' LIMIT 1 made by wp_install, wp_create_user, wp_insert_user
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_users' doesn't exist in engine for query SELECT * FROM wp_users WHERE user_email = 'datoshcode@gmail.com' LIMIT 1 made by wp_install, wp_create_user, wp_insert_user, email_exists, get_user_by, WP_User::get_data_by
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_users' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_users` made by wp_install, wp_create_user, wp_insert_user
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_users' doesn't exist in engine for query SELECT COUNT(ID) as c FROM wp_users made by wp_install, wp_create_user, wp_insert_user, do_action('user_register'), WP_Hook->do_action, WP_Hook->apply_filters, wp_maybe_update_user_counts, wp_update_user_counts
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('user_count', '', 'off') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_create_user, wp_insert_user, do_action('user_register'), WP_Hook->do_action, WP_Hook->apply_filters, wp_maybe_update_user_counts, wp_update_user_counts, update_network_option, add_network_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_terms' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_terms` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_term_taxonomy' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_term_taxonomy` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_posts' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_posts` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_term_relationships' doesn't exist in engine for query INSERT INTO `wp_term_relationships` (`term_taxonomy_id`, `object_id`) VALUES (0, 1) made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_comments' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_comments` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_posts' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_posts` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_postmeta' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_postmeta` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_posts' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_posts` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_postmeta' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_postmeta` made by wp_install, wp_install_defaults
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('wp_page_for_privacy_policy', '3', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_install_defaults, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, wp_install_defaults, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('sidebars_widgets', 'a:4:{s:19:\"wp_inactive_widgets\";a:0:{}s:9:\"sidebar-1\";a:3:{i:0;s:7:\"block-2\";i:1;s:7:\"block-3\";i:2;s:7:\"block-4\";}s:9:\"sidebar-2\";a:2:{i:0;s:7:\"block-5\";i:1;s:7:\"block-6\";}s:13:\"array_version\";i:3;}', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_install_defaults, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, wp_install_maybe_enable_pretty_permalinks, WP_Rewrite->set_permalink_structure, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('rewrite_rules', '', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_install_maybe_enable_pretty_permalinks, WP_Rewrite->flush_rules, WP_Rewrite->refresh_rewrite_rules, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_posts' doesn't exist in engine for query 
+		SELECT ID, post_name, post_parent, post_type
+		FROM wp_posts
+		WHERE post_name IN ('%d0%bf%d1%80%d0%b8%d0%b2%d0%b5%d1%82-%d0%bc%d0%b8%d1%80')
+		AND post_type IN ('post','attachment')
+	 made by wp_install, wp_install_maybe_enable_pretty_permalinks, get_page_by_path
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, wp_install_maybe_enable_pretty_permalinks, WP_Rewrite->set_permalink_structure, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('rewrite_rules', '', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_install_maybe_enable_pretty_permalinks, WP_Rewrite->flush_rules, WP_Rewrite->refresh_rewrite_rules, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query SHOW FULL COLUMNS FROM `wp_options` made by wp_install, wp_install_maybe_enable_pretty_permalinks, WP_Rewrite->set_permalink_structure, update_option, sanitize_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('rewrite_rules', '', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, wp_install_maybe_enable_pretty_permalinks, WP_Rewrite->flush_rules, WP_Rewrite->refresh_rewrite_rules, update_option, add_option
+[21-May-2026 20:19:30 UTC] WordPress database error Table 'testwp7_db.wp_options' doesn't exist in engine for query INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('rewrite_rules', '', 'auto') ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`) made by wp_install, flush_rewrite_rules, WP_Rewrite->flush_rules, WP_Rewrite->refresh_rewrite_rules, update_option, add_option
