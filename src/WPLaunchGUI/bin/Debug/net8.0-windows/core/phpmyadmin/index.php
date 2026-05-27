@@ -1,0 +1,1 @@
+﻿<?php echo '<h1>phpMyAdmin</h1><p>Please download phpMyAdmin from <a href="https://www.phpmyadmin.net/" target="_blank">www.phpmyadmin.net</a></p><p>Extract files to: C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\phpmyadmin</p>'; ?>

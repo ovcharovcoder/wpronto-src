@@ -1,0 +1,16 @@
+C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\WPLaunchGUI.exe
+C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\WPLaunchGUI.deps.json
+C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\WPLaunchGUI.runtimeconfig.json
+C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\WPLaunchGUI.dll
+C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\WPLaunchGUI.pdb
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.csproj.GenerateResource.cache
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.GeneratedMSBuildEditorConfig.editorconfig
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.AssemblyInfoInputs.cache
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.AssemblyInfo.cs
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.csproj.CoreCompileInputs.cache
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.dll
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\refint\WPLaunchGUI.dll
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.pdb
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.genruntimeconfig.cache
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\ref\WPLaunchGUI.dll
+C:\WPLaunch\src\WPLaunchGUI\obj\Debug\net8.0-windows\WPLaunchGUI.ThemeManager.resources

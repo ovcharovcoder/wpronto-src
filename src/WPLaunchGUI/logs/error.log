@@ -1,0 +1,2 @@
+2026/05/22 00:12:53 [emerg] 16468#10364: CreateFile() "C:\WPLaunch\src\WPLaunchGUI/conf/nginx.conf" failed (3: The system cannot find the path specified)
+2026/05/22 00:15:03 [emerg] 4872#14816: CreateFile() "C:\WPLaunch\src\WPLaunchGUI/conf/nginx.conf" failed (3: The system cannot find the path specified)

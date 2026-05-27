@@ -1,0 +1,5 @@
+C:\WPLaunch\publish_final\WPLaunchGUI.exe
+C:\WPLaunch\publish_final\WPLaunchGUI.dll
+C:\WPLaunch\publish_final\WPLaunchGUI.deps.json
+C:\WPLaunch\publish_final\WPLaunchGUI.runtimeconfig.json
+C:\WPLaunch\publish_final\WPLaunchGUI.pdb
