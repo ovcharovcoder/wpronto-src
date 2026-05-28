@@ -194,40 +194,6 @@ publish\             ~50-100 MB
 Total                ~400-600 MB
 ```
 
-## For developers
-```bash
-# Clone the repository
-git clone https://github.com/ovcharovcoder/wpronto-src.git
-
-# Navigate to project
-cd WPLaunch/src/WProntoGUI
-
-# Build the project
-dotnet build -c Release
-
-# Publish the application
-dotnet publish -c Release -o publish
-```
-
-### Publish the application
-```
-dotnet publish -c Release -o publish
-```
-
-### Copy required folders
-```
-Copy-Item -Path "core" -Destination "publish" -Recurse
-Copy-Item -Path "config" -Destination "publish" -Recurse
-Copy-Item -Path "data" -Destination "publish" -Recurse
-Copy-Item -Path "template" -Destination "publish" -Recurse
-Copy-Item -Path "www" -Destination "publish" -Recurse
-```
-
-### Compile installer using Inno Setup
-```
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer_final.iss
-```
-
  ## License
 This project is licensed under the MIT License – see the LICENSE file for details.
 
