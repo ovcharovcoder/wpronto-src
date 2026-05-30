@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -482,7 +482,7 @@ namespace WPLaunchGUI
             lnkWebsite = new LinkLabel
             {
                 Text = "Official Website",
-                Location = new Point(ScaleInt(672), ScaleInt(485)),
+                Location = new Point(ScaleInt(672), ScaleInt(480)),
                 AutoSize = true,
                 LinkColor = scheme.PrimaryColor,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Regular)
@@ -496,7 +496,7 @@ namespace WPLaunchGUI
             Label lblDev = new Label
             {
                 Text = "© 2026 Andrii Ovcharov",
-                Location = new Point(ScaleInt(670), ScaleInt(505)),
+                Location = new Point(ScaleInt(670), ScaleInt(500)),
                 AutoSize = true,
                 ForeColor = scheme.TextMuted,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular)
