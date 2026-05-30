@@ -27,20 +27,38 @@ dotnet build -c Release
 # Крок 3: Публікація (створює WProntoGUI.exe завдяки налаштуванням проекту)
 dotnet publish -c Release -o "C:\WPronto\publish"
 
-# Крок 4: Копіювання папок з сервером
-$folders = @("core", "config", "data", "template", "www")
+# Крок 4: Копіювання папок з сервером (ДОДАНО "logs")
+$folders = @("core", "config", "data", "template", "www", "logs")
 foreach ($folder in $folders) {
-    Copy-Item -Path "C:\WPronto\$folder" -Destination "C:\WPronto\publish\" -Recurse -Force
+    if (Test-Path "C:\WPronto\$folder") {
+        Copy-Item -Path "C:\WPronto\$folder" -Destination "C:\WPronto\publish\" -Recurse -Force
+        Write-Host "✅ Скопійовано: $folder"
+    }
 }
 
 # Крок 5: Копіювання текстових файлів
-Copy-Item -Path "C:\WPronto\about.txt" -Destination "C:\WPronto\publish\" -Force
-Copy-Item -Path "C:\WPronto\license.txt" -Destination "C:\WPronto\publish\" -Force
+Copy-Item -Path "C:\WPronto\about.txt" -Destination "C:\WPronto\publish\" -Force -ErrorAction SilentlyContinue
+Copy-Item -Path "C:\WPronto\license.txt" -Destination "C:\WPronto\publish\" -Force -ErrorAction SilentlyContinue
+Write-Host "✅ Текстові файли скопійовано" -ForegroundColor Green
 
-# Крок 6: Створення інсталятора
-& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "C:\WPronto\installer_final.iss"
+# Крок 6: Створення інсталятора (опціонально)
+if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+    if (Test-Path "C:\WPronto\installer_final.iss") {
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "C:\WPronto\installer_final.iss"
+        Write-Host "✅ Інсталятор створено" -ForegroundColor Green
+    } else {
+        Write-Host "⚠ Файл installer_final.iss не знайдено" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "⚠ Inno Setup не знайдено, пропускаємо створення інсталятора" -ForegroundColor Yellow
+}
 
-Write-Host "✅ Готово!" -ForegroundColor Green
+# Показуємо розмір збірки
+$publishSize = [math]::Round((Get-ChildItem "C:\WPronto\publish" -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB, 2)
+Write-Host "`n📦 Розмір збірки: $publishSize MB" -ForegroundColor Cyan
+
+Write-Host "`n✅ Готово! Збірка в C:\WPronto\publish" -ForegroundColor Green
+Write-Host "🚀 Запустіть: C:\WPronto\publish\WProntoGUI.exe" -ForegroundColor Cyan
 
 -------------------------------------------
 
