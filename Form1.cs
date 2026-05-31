@@ -199,6 +199,7 @@ namespace WPLaunchGUI
         private Label btnTheme;
         private ComboBox comboPhpVersion;
         private Label lblPhpStatus;
+        private Label lblVersion;  // НОВА ЛЕЙБЛА ДЛЯ ВЕРСІЇ
 
         private float _dpiScale = 1.0f;
         private int ScaleInt(int value) => (int)(value * _dpiScale);
@@ -470,6 +471,7 @@ cgi.fix_pathinfo=1
 
             if (lblTitle != null) lblTitle.ForeColor = scheme.TextPrimary;
             if (lblSubtitle != null) lblSubtitle.ForeColor = scheme.TextMuted;
+            if (lblVersion != null) lblVersion.ForeColor = scheme.TextMuted;  // КОЛІР ДЛЯ ВЕРСІЇ
 
             if (listSites != null)
             {
@@ -504,7 +506,7 @@ cgi.fix_pathinfo=1
 
             foreach (Control control in this.Controls)
             {
-                if (control is Label label && label != lblTitle && label != lblSubtitle && label != lblStatus && label != btnTheme && label != lblPhpStatus)
+                if (control is Label label && label != lblTitle && label != lblSubtitle && label != lblStatus && label != btnTheme && label != lblPhpStatus && label != lblVersion)
                 {
                     if (!(label is LinkLabel))
                         label.ForeColor = scheme.TextMuted;
@@ -560,9 +562,7 @@ cgi.fix_pathinfo=1
             };
             btnTheme.Click += BtnTheme_Click;
 
-            // =========================
-            // PHP VERSION SELECTOR - ЛІВОРУЧ ВІД КНОПОК, НА ОДНОМУ РІВНІ
-            // =========================
+            // PHP VERSION SELECTOR
             Label lblPhpVersion = new Label
             {
                 Text = "PHP:",
@@ -582,12 +582,10 @@ cgi.fix_pathinfo=1
                 ForeColor = scheme.TextSecondary
             };
 
-            // Додаємо версії PHP
             comboPhpVersion.Items.Clear();
             comboPhpVersion.Items.Add("8.3");
             comboPhpVersion.Items.Add("8.5");
 
-            // Встановлюємо вибрану версію
             if (comboPhpVersion.Items.Contains(_currentPhpVersion))
                 comboPhpVersion.SelectedItem = _currentPhpVersion;
             else
@@ -651,7 +649,7 @@ cgi.fix_pathinfo=1
                 }
             };
 
-            // TOP BUTTONS PANEL - НА ТОМУ Ж МІСЦІ
+            // TOP BUTTONS PANEL
             FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
             {
                 Location = new Point(ScaleInt(260), ScaleInt(105)),
@@ -775,6 +773,18 @@ cgi.fix_pathinfo=1
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular)
             };
 
+            // =========================
+            // ВЕРСІЯ ПРОГРАМИ (НИЖНІЙ ЛІВИЙ КУТ)
+            // =========================
+            lblVersion = new Label
+            {
+                Text = "v 2.0",
+                Location = new Point(ScaleInt(32), ScaleInt(550)),
+                AutoSize = true,
+                ForeColor = scheme.TextMuted,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular)
+            };
+
             // Додаємо всі елементи
             this.Controls.Add(lblTitle);
             this.Controls.Add(lblSubtitle);
@@ -795,6 +805,7 @@ cgi.fix_pathinfo=1
             this.Controls.Add(btnAbout);
             this.Controls.Add(lnkWebsite);
             this.Controls.Add(lblDev);
+            this.Controls.Add(lblVersion);  // ДОДАЄМО ЛЕЙБЛ ВЕРСІЇ
         }
 
         private void BtnTheme_Click(object sender, EventArgs e)
