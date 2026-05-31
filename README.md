@@ -20,8 +20,8 @@ WPronto is a lightweight, portable local WordPress server for Windows that allow
 
 | Component | Technology | Version | Purpose |
 |-----------|------------|---------|---------|
-| **Web Server** | Nginx | 1.26.0 | HTTP server, request handling |
-| **PHP Engine** | PHP (Non-Thread Safe) | 8.5.6 | WordPress execution |
+| **Web Server** | Nginx | 1.30.2 | HTTP server, request handling |
+| **PHP Engine** | PHP (Non-Thread Safe) | 8.3/8.5 | WordPress execution |
 | **Database Server** | MariaDB | 11.4.2 | MySQL-compatible database |
 | **Database Manager** | phpMyAdmin | 5.2.3 | Web-based database administration |
 | **WordPress CLI** | WP-CLI | 2.12.0 | Command-line WordPress management |
