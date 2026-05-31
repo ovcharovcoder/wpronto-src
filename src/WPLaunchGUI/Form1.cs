@@ -13,37 +13,30 @@ using System.Windows.Forms;
 namespace WPLaunchGUI
 {
     public enum ButtonStyle { Default, Primary, Danger, Success }
-
-    // Додано: enum для тем
     public enum AppTheme { Light, Dark, System }
 
-    // Додано: клас для керування темами
+    // =========================
+    // THEME MANAGER
+    // =========================
     public static class ThemeManager
     {
         public static AppTheme CurrentTheme { get; private set; } = AppTheme.Light;
         public static event Action<AppTheme> ThemeChanged;
-
         private static ColorScheme _currentScheme = new LightColorScheme();
-
         public static ColorScheme CurrentScheme => _currentScheme;
 
         public static void SetTheme(AppTheme theme)
         {
             CurrentTheme = theme;
-
             if (theme == AppTheme.System)
             {
                 bool isDark = IsSystemDarkMode();
                 _currentScheme = isDark ? new DarkColorScheme() : new LightColorScheme();
             }
             else if (theme == AppTheme.Dark)
-            {
                 _currentScheme = new DarkColorScheme();
-            }
             else
-            {
                 _currentScheme = new LightColorScheme();
-            }
 
             ThemeChanged?.Invoke(CurrentTheme);
             SaveThemeSetting(theme);
@@ -56,9 +49,7 @@ namespace WPLaunchGUI
                 using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
                 {
                     if (key?.GetValue("AppsUseLightTheme") is int value)
-                    {
                         return value == 0;
-                    }
                 }
             }
             catch { }
@@ -67,12 +58,7 @@ namespace WPLaunchGUI
 
         private static void SaveThemeSetting(AppTheme theme)
         {
-            try
-            {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "theme.config");
-                File.WriteAllText(configPath, theme.ToString());
-            }
-            catch { }
+            try { File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "theme.config"), theme.ToString()); } catch { }
         }
 
         public static AppTheme LoadThemeSetting()
@@ -80,19 +66,17 @@ namespace WPLaunchGUI
             try
             {
                 string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "theme.config");
-                if (File.Exists(configPath))
-                {
-                    string setting = File.ReadAllText(configPath);
-                    if (Enum.TryParse<AppTheme>(setting, out AppTheme theme))
-                        return theme;
-                }
+                if (File.Exists(configPath) && Enum.TryParse<AppTheme>(File.ReadAllText(configPath), out AppTheme theme))
+                    return theme;
             }
             catch { }
             return AppTheme.Light;
         }
     }
 
-    // Додано: базовий клас для кольорової схеми
+    // =========================
+    // COLOR SCHEMES
+    // =========================
     public abstract class ColorScheme
     {
         public abstract Color BackgroundPrimary { get; }
@@ -112,7 +96,6 @@ namespace WPLaunchGUI
         public abstract Color StatusStopped { get; }
     }
 
-    // Додано: світла тема
     public class LightColorScheme : ColorScheme
     {
         public override Color BackgroundPrimary => Color.FromArgb(243, 245, 248);
@@ -132,7 +115,6 @@ namespace WPLaunchGUI
         public override Color StatusStopped => Color.FromArgb(196, 43, 28);
     }
 
-    // Додано: темна тема
     public class DarkColorScheme : ColorScheme
     {
         public override Color BackgroundPrimary => Color.FromArgb(32, 33, 36);
@@ -161,8 +143,8 @@ namespace WPLaunchGUI
         public const int AlternativePort = 8080;
         public const int PhpPort = 9000;
         public const int MysqlPort = 3306;
-        public const int UploadMaxSize = 256; // MB
-        public const int MemoryLimit = 512; // MB
+        public const int UploadMaxSize = 256;
+        public const int MemoryLimit = 512;
         public const string TimeZone = "Europe/Kyiv";
         public const int ProcessStartDelay = 2000;
         public const int NginxStartDelay = 3000;
@@ -170,9 +152,7 @@ namespace WPLaunchGUI
 
     public class Form1 : Form
     {
-        // =========================
         // LOGIC VARIABLES
-        // =========================
         private System.Windows.Forms.Timer _statusTimer;
         private string _basePath = string.Empty;
         private string _nginxPath = string.Empty;
@@ -194,13 +174,13 @@ namespace WPLaunchGUI
         private string _pmaPath = string.Empty;
         private string _backupPath = string.Empty;
 
-        // Port configuration
         private int _webPort = Config.DefaultPort;
         private int _pmaPort = Config.DefaultPort;
 
-        // =========================
+        // PHP version
+        private string _currentPhpVersion = "8.3";
+
         // UI ELEMENTS
-        // =========================
         private ListBox listSites;
         private RichTextBox txtLog;
         private SoftButton btnStart;
@@ -216,29 +196,26 @@ namespace WPLaunchGUI
         private Label lblTitle;
         private Label lblSubtitle;
         private LinkLabel lnkWebsite;
-        private Label btnTheme; // Додано: прозора мітка для теми
+        private Label btnTheme;
+        private ComboBox comboPhpVersion;
+        private Label lblPhpStatus;
+        private Label lblVersion;  // НОВА ЛЕЙБЛА ДЛЯ ВЕРСІЇ
 
-        // =========================
-        // DPI FIX
-        // =========================
         private float _dpiScale = 1.0f;
-
         private int ScaleInt(int value) => (int)(value * _dpiScale);
 
         public Form1()
         {
-            // DPI DETECTION
             using (Graphics g = this.CreateGraphics())
             {
                 _dpiScale = g.DpiX / 96f;
-                if (_dpiScale > 1.15f)
-                    _dpiScale = 1.15f;
+                if (_dpiScale > 1.15f) _dpiScale = 1.15f;
             }
 
             this.Text = "WPronto — Local WP Environment";
-            this.Size = new Size(ScaleInt(840), ScaleInt(600));
-            this.MinimumSize = new Size(ScaleInt(840), ScaleInt(600));
-            this.MaximumSize = new Size(ScaleInt(840), ScaleInt(600));
+            this.Size = new Size(ScaleInt(840), ScaleInt(620));
+            this.MinimumSize = new Size(ScaleInt(840), ScaleInt(620));
+            this.MaximumSize = new Size(ScaleInt(840), ScaleInt(620));
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -246,20 +223,15 @@ namespace WPLaunchGUI
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
             if (File.Exists(iconPath))
                 this.Icon = new Icon(iconPath);
-            else
-            {
-                string altIconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\app.ico");
-                if (File.Exists(altIconPath))
-                    this.Icon = new Icon(altIconPath);
-            }
+
+            // Завантаження збереженої PHP версії
+            _currentPhpVersion = LoadPhpVersionSetting();
 
             InitializePaths();
             EnsureDirectories();
             EnsureConfigFiles();
-
             CreateProfessionalLayout();
 
-            // Додано: завантаження та застосування теми
             var savedTheme = ThemeManager.LoadThemeSetting();
             ThemeManager.SetTheme(savedTheme);
             ThemeManager.ThemeChanged += (theme) => ApplyTheme();
@@ -276,470 +248,23 @@ namespace WPLaunchGUI
             _statusTimer.Start();
         }
 
-        // Додано: метод для застосування теми
-        private void ApplyTheme()
-        {
-            var scheme = ThemeManager.CurrentScheme;
-
-            this.BackColor = scheme.BackgroundPrimary;
-
-            if (lblTitle != null) lblTitle.ForeColor = scheme.TextPrimary;
-            if (lblSubtitle != null) lblSubtitle.ForeColor = scheme.TextMuted;
-
-            if (listSites != null)
-            {
-                listSites.BackColor = scheme.BackgroundCard;
-                listSites.ForeColor = scheme.TextSecondary;
-                listSites.Invalidate();
-            }
-
-            if (txtLog != null)
-            {
-                txtLog.BackColor = scheme.LogBackground;
-                txtLog.ForeColor = scheme.TextSecondary;
-            }
-
-            // Оновлення статусу
-            bool running = IsProcessRunning("nginx") && IsProcessRunning("php-cgi") && IsProcessRunning("mysqld");
-            if (lblStatus != null)
-            {
-                lblStatus.ForeColor = running ? scheme.StatusRunning : scheme.StatusStopped;
-            }
-
-            // Оновлення прозорої кнопки теми
-            if (btnTheme != null)
-            {
-                string themeIcon = ThemeManager.CurrentTheme == AppTheme.Light ? "☀️" : (ThemeManager.CurrentTheme == AppTheme.Dark ? "🌙" : "🌓");
-                btnTheme.Text = themeIcon;
-                btnTheme.ForeColor = scheme.TextPrimary;
-            }
-
-            // Перемальовка всіх елементів
-            foreach (Control control in this.Controls)
-            {
-                if (control is Label label && label != lblTitle && label != lblSubtitle && label != lblStatus && label != btnTheme)
-                {
-                    if (!(label is LinkLabel))
-                        label.ForeColor = scheme.TextMuted;
-                }
-                control.Invalidate();
-            }
-        }
-
-        private void CreateProfessionalLayout()
-        {
-            var scheme = ThemeManager.CurrentScheme;
-
-            // HEADER
-            lblTitle = new Label
-            {
-                Text = "WPronto",
-                Font = new Font("Segoe UI Semibold", 22f, FontStyle.Bold),
-                ForeColor = scheme.TextPrimary,
-                Location = new Point(ScaleInt(32), ScaleInt(25)),
-                AutoSize = true
-            };
-
-            lblSubtitle = new Label
-            {
-                Text = "Local WordPress Development Environment",
-                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
-                ForeColor = scheme.TextMuted,
-                Location = new Point(ScaleInt(35), ScaleInt(70)),
-                AutoSize = true
-            };
-
-            lblStatus = new Label
-            {
-                Text = "● SERVER STOPPED",
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                ForeColor = scheme.StatusStopped,
-                Location = new Point(ScaleInt(540), ScaleInt(32)),
-                Size = new Size(ScaleInt(220), ScaleInt(30)),
-                TextAlign = ContentAlignment.MiddleRight
-            };
-
-            // Додано: прозора мітка для перемикання теми (без фону та зайвого тексту)
-            btnTheme = new Label
-            {
-                Text = ThemeManager.CurrentTheme == AppTheme.Light ? "☀️" : (ThemeManager.CurrentTheme == AppTheme.Dark ? "🌙" : "🌓"),
-                Size = new Size(ScaleInt(40), ScaleInt(32)),
-                Location = new Point(ScaleInt(770), ScaleInt(28)),
-                Font = new Font("Segoe UI", 14f),
-                Cursor = Cursors.Hand,
-                ForeColor = scheme.TextPrimary,
-                BackColor = Color.Transparent,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            btnTheme.Click += (s, e) => BtnTheme_Click(s, e);
-            btnTheme.MouseEnter += (s, e) => btnTheme.Cursor = Cursors.Hand;
-            this.Controls.Add(btnTheme);
-
-            // TOP BUTTONS
-            FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
-            {
-                Location = new Point(ScaleInt(315), ScaleInt(105)),
-                Size = new Size(ScaleInt(500), ScaleInt(50)),
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false
-            };
-
-            btnStart = new SoftButton("Start (Ctrl+S)", ButtonStyle.Primary, _dpiScale);
-            btnStart.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
-            btnStart.Click += BtnStart_Click;
-
-            btnStop = new SoftButton("Stop (Ctrl+X)", ButtonStyle.Danger, _dpiScale);
-            btnStop.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
-            btnStop.Click += BtnStop_Click;
-
-            btnOpenLocalhost = new SoftButton("Open Admin", ButtonStyle.Primary, _dpiScale);
-            btnOpenLocalhost.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
-            btnOpenLocalhost.Click += BtnOpenAdmin_Click;
-
-            btnPhpMyAdmin = new SoftButton("phpMyAdmin", ButtonStyle.Default, _dpiScale);
-            btnPhpMyAdmin.Margin = new Padding(ScaleInt(2), 0, 0, 0);
-            btnPhpMyAdmin.Click += BtnPhpMyAdmin_Click;
-
-            topButtonsPanel.Controls.AddRange(new Control[]
-            {
-                btnStart, btnStop, btnOpenLocalhost, btnPhpMyAdmin
-            });
-
-            // SITES LABEL
-            Label lblSitesTitle = new Label
-            {
-                Text = "SITES",
-                Font = new Font("Segoe UI", 8f, FontStyle.Bold),
-                ForeColor = scheme.TextMuted,
-                Location = new Point(ScaleInt(32), ScaleInt(155)),
-                AutoSize = true
-            };
-
-            // SITES CARD
-            ModernCard cardSites = new ModernCard(ScaleInt(32), ScaleInt(175), ScaleInt(260), ScaleInt(285), _dpiScale);
-            listSites = new ListBox
-            {
-                Dock = DockStyle.Fill,
-                BorderStyle = BorderStyle.None,
-                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
-                ItemHeight = ScaleInt(32),
-                DrawMode = DrawMode.OwnerDrawFixed,
-                BackColor = scheme.BackgroundCard
-            };
-            listSites.DrawItem += ListSites_DrawItem;
-            cardSites.Controls.Add(listSites);
-
-            // LOG LABEL
-            Label lblLogsTitle = new Label
-            {
-                Text = "SERVER LOG",
-                Font = new Font("Segoe UI", 8f, FontStyle.Bold),
-                ForeColor = scheme.TextMuted,
-                Location = new Point(ScaleInt(315), ScaleInt(155)),
-                AutoSize = true
-            };
-
-            // LOG CARD
-            ModernCard cardLogs = new ModernCard(ScaleInt(315), ScaleInt(175), ScaleInt(485), ScaleInt(285), _dpiScale);
-            txtLog = new RichTextBox
-            {
-                Dock = DockStyle.Fill,
-                BorderStyle = BorderStyle.None,
-                ReadOnly = true,
-                BackColor = scheme.LogBackground,
-                ForeColor = scheme.TextSecondary,
-                Font = new Font("Consolas", 9f, FontStyle.Regular)
-            };
-            cardLogs.Controls.Add(txtLog);
-
-            // FOOTER BUTTONS
-            btnCreateSite = new SoftButton("Create Site", ButtonStyle.Primary, _dpiScale);
-            btnCreateSite.Location = new Point(ScaleInt(32), ScaleInt(480));
-            btnCreateSite.Width = ScaleInt(110);
-            btnCreateSite.Click += BtnCreateSite_Click;
-
-            btnBackupSite = new SoftButton("Backup Site", ButtonStyle.Success, _dpiScale);
-            btnBackupSite.Location = new Point(ScaleInt(152), ScaleInt(480));
-            btnBackupSite.Width = ScaleInt(110);
-            btnBackupSite.Click += BtnBackupSite_Click;
-
-            btnDeleteSite = new SoftButton("Delete Site", ButtonStyle.Danger, _dpiScale);
-            btnDeleteSite.Location = new Point(ScaleInt(272), ScaleInt(480));
-            btnDeleteSite.Width = ScaleInt(110);
-            btnDeleteSite.Click += BtnDeleteSite_Click;
-
-            btnLicense = new SoftButton("License", ButtonStyle.Default, _dpiScale);
-            btnLicense.Location = new Point(ScaleInt(392), ScaleInt(480));
-            btnLicense.Width = ScaleInt(90);
-            btnLicense.Click += BtnLicense_Click;
-
-            btnAbout = new SoftButton("About", ButtonStyle.Default, _dpiScale);
-            btnAbout.Location = new Point(ScaleInt(492), ScaleInt(480));
-            btnAbout.Width = ScaleInt(90);
-            btnAbout.Click += BtnAbout_Click;
-
-            // WEBSITE LINK
-            lnkWebsite = new LinkLabel
-            {
-                Text = "Official Website",
-                Location = new Point(ScaleInt(672), ScaleInt(485)),
-                AutoSize = true,
-                LinkColor = scheme.PrimaryColor,
-                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Regular)
-            };
-            lnkWebsite.LinkClicked += (s, e) =>
-            {
-                try { Process.Start(new ProcessStartInfo { FileName = "https://ovcharovcoder.github.io/wpronto", UseShellExecute = true }); }
-                catch { }
-            };
-
-            Label lblDev = new Label
-            {
-                Text = "© 2026 Andrii Ovcharov",
-                Location = new Point(ScaleInt(670), ScaleInt(505)),
-                AutoSize = true,
-                ForeColor = scheme.TextMuted,
-                Font = new Font("Segoe UI", 9f, FontStyle.Regular)
-            };
-
-            this.Controls.Add(lblTitle);
-            this.Controls.Add(lblSubtitle);
-            this.Controls.Add(lblStatus);
-            this.Controls.Add(topButtonsPanel);
-            this.Controls.Add(lblSitesTitle);
-            this.Controls.Add(cardSites);
-            this.Controls.Add(lblLogsTitle);
-            this.Controls.Add(cardLogs);
-            this.Controls.Add(btnCreateSite);
-            this.Controls.Add(btnBackupSite);
-            this.Controls.Add(btnDeleteSite);
-            this.Controls.Add(btnLicense);
-            this.Controls.Add(btnAbout);
-            this.Controls.Add(lnkWebsite);
-            this.Controls.Add(lblDev);
-        }
-
-        // Додано: обробник кнопки теми
-        private void BtnTheme_Click(object sender, EventArgs e)
-        {
-            var currentTheme = ThemeManager.CurrentTheme;
-            AppTheme newTheme;
-
-            switch (currentTheme)
-            {
-                case AppTheme.Light:
-                    newTheme = AppTheme.Dark;
-                    break;
-                case AppTheme.Dark:
-                    newTheme = AppTheme.System;
-                    break;
-                default:
-                    newTheme = AppTheme.Light;
-                    break;
-            }
-
-            ThemeManager.SetTheme(newTheme);
-
-            string themeName = newTheme == AppTheme.Light ? "Light" : (newTheme == AppTheme.Dark ? "Dark" : "System");
-            Log($"🎨 Theme changed to: {themeName}");
-        }
-
-        // =========================
-        // HOTKEYS
-        // =========================
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (keyData == (Keys.Control | Keys.S))
-            {
-                BtnStart_Click(this, EventArgs.Empty);
-                return true;
-            }
-            if (keyData == (Keys.Control | Keys.X))
-            {
-                BtnStop_Click(this, EventArgs.Empty);
-                return true;
-            }
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        // =========================
-        // SOFT BUTTON CLASS (MODIFIED FOR THEME SUPPORT)
-        // =========================
-        public class SoftButton : Button
-        {
-            private bool _isHovered = false;
-            private bool _isPressed = false;
-            private ButtonStyle _style;
-            private float _dpiScale;
-
-            public SoftButton(string text, ButtonStyle style = ButtonStyle.Default, float dpiScale = 1.0f)
-            {
-                this.Text = text;
-                _style = style;
-                _dpiScale = dpiScale;
-
-                int scale(int v) => (int)(v * dpiScale);
-                this.Size = new Size(scale(105), scale(34));
-                this.FlatStyle = FlatStyle.Flat;
-                this.FlatAppearance.BorderSize = 0;
-                this.Cursor = Cursors.Hand;
-                this.Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold);
-                this.Margin = new Padding(scale(2), 0, scale(2), 0);
-
-                this.MouseEnter += (s, e) => { _isHovered = true; Invalidate(); };
-                this.MouseLeave += (s, e) => { _isHovered = false; _isPressed = false; Invalidate(); };
-                this.MouseDown += (s, e) => { _isPressed = true; Invalidate(); };
-                this.MouseUp += (s, e) => { _isPressed = false; Invalidate(); };
-
-                // Додано: підписка на зміну теми
-                ThemeManager.ThemeChanged += (theme) => Invalidate();
-            }
-
-            protected override void OnPaint(PaintEventArgs pevent)
-            {
-                pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                pevent.Graphics.Clear(this.Parent.BackColor);
-
-                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
-                int r = (int)(8 * _dpiScale);
-
-                var scheme = ThemeManager.CurrentScheme;
-                Color bg = scheme.BackgroundCard;
-                Color border = scheme.BorderColor;
-                Color text = scheme.TextSecondary;
-
-                if (_style == ButtonStyle.Primary)
-                {
-                    bg = _isHovered ? scheme.PrimaryHover : scheme.PrimaryColor;
-                    border = bg;
-                    text = Color.White;
-                }
-                else if (_style == ButtonStyle.Danger)
-                {
-                    bg = _isHovered ? Color.FromArgb(200, 35, 51) : scheme.DangerColor;
-                    border = bg;
-                    text = Color.White;
-                }
-                else if (_style == ButtonStyle.Success)
-                {
-                    bg = _isHovered ? Color.FromArgb(40, 150, 60) : scheme.SuccessColor;
-                    border = bg;
-                    text = Color.White;
-                }
-                else if (_isHovered)
-                {
-                    bg = scheme.SelectionBackground;
-                    border = scheme.PrimaryColor;
-                }
-
-                if (_isPressed) bg = scheme.BorderColor;
-
-                using (GraphicsPath path = CreateRoundedRect(rect, r))
-                {
-                    using (SolidBrush b = new SolidBrush(Enabled ? bg : scheme.BorderColor))
-                        pevent.Graphics.FillPath(b, path);
-                    using (Pen p = new Pen(Enabled ? border : scheme.BorderColor, 1.0f))
-                        pevent.Graphics.DrawPath(p, path);
-                }
-
-                TextRenderer.DrawText(pevent.Graphics, this.Text, this.Font, rect,
-                    Enabled ? text : scheme.TextMuted,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            }
-        }
-
-        // =========================
-        // MODERN CARD CLASS (MODIFIED FOR THEME SUPPORT)
-        // =========================
-        public class ModernCard : Panel
-        {
-            private float _dpiScale;
-            public ModernCard(int x, int y, int w, int h, float dpiScale = 1.0f)
-            {
-                this._dpiScale = dpiScale;
-                this.Location = new Point(x, y);
-                this.Size = new Size(w, h);
-                this.BackColor = ThemeManager.CurrentScheme.BackgroundCard;
-                this.Padding = new Padding(1);
-
-                // Додано: підписка на зміну теми
-                ThemeManager.ThemeChanged += (theme) =>
-                {
-                    this.BackColor = ThemeManager.CurrentScheme.BackgroundCard;
-                    this.Invalidate();
-                };
-            }
-
-            protected override void OnPaint(PaintEventArgs e)
-            {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                int r = (int)(8 * _dpiScale);
-                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
-                using (GraphicsPath path = CreateRoundedRect(rect, r))
-                {
-                    this.Region = new Region(path);
-                    using (Pen p = new Pen(ThemeManager.CurrentScheme.BorderColor, 1.0f))
-                        e.Graphics.DrawPath(p, path);
-                }
-            }
-        }
-
-        private void ListSites_DrawItem(object sender, DrawItemEventArgs e)
-        {
-            if (e.Index < 0) return;
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            string text = listSites.Items[e.Index]?.ToString() ?? "";
-
-            var scheme = ThemeManager.CurrentScheme;
-
-            e.Graphics.FillRectangle(new SolidBrush(scheme.BackgroundCard), e.Bounds);
-
-            if (isSelected)
-            {
-                Rectangle highlightRect = new Rectangle(e.Bounds.X + (int)(5 * _dpiScale), e.Bounds.Y + (int)(2 * _dpiScale),
-                    e.Bounds.Width - (int)(10 * _dpiScale), e.Bounds.Height - (int)(4 * _dpiScale));
-                using (GraphicsPath path = CreateRoundedRect(highlightRect, (int)(5 * _dpiScale)))
-                {
-                    using (SolidBrush b = new SolidBrush(scheme.SelectionBackground))
-                        e.Graphics.FillPath(b, path);
-                    using (Pen p = new Pen(scheme.PrimaryColor, 1.0f))
-                        e.Graphics.DrawPath(p, path);
-                }
-            }
-            TextRenderer.DrawText(e.Graphics, text, listSites.Font, e.Bounds,
-                isSelected ? scheme.PrimaryColor : scheme.TextSecondary,
-                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.LeftAndRightPadding);
-        }
-
-        public static GraphicsPath CreateRoundedRect(Rectangle rect, int r)
-        {
-            GraphicsPath path = new GraphicsPath();
-            path.AddArc(rect.X, rect.Y, r, r, 180, 90);
-            path.AddArc(rect.Right - r, rect.Y, r, r, 270, 90);
-            path.AddArc(rect.Right - r, rect.Bottom - r, r, r, 0, 90);
-            path.AddArc(rect.X, rect.Bottom - r, r, r, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
-
-        // =========================
-        // APPLICATION LOGIC (UNCHANGED BELOW)
-        // =========================
+        private string GetCurrentPhpFolder() => $"php{_currentPhpVersion.Replace(".", "")}";
 
         private void InitializePaths()
         {
             string exePath = AppDomain.CurrentDomain.BaseDirectory;
             _basePath = exePath.TrimEnd('\\');
 
+            string phpVersionFolder = GetCurrentPhpFolder();
+
             _nginxPath = Path.Combine(_basePath, @"core\nginx\nginx.exe");
             _nginxWorkingDir = Path.Combine(_basePath, @"core\nginx");
             _nginxConfDir = Path.Combine(_basePath, @"core\nginx\conf");
             _nginxConf = Path.Combine(_nginxConfDir, "nginx.conf");
 
-            _phpCgiPath = Path.Combine(_basePath, @"core\php\php-cgi.exe");
-            _phpWorkingDir = Path.Combine(_basePath, @"core\php");
-            _phpIni = Path.Combine(_basePath, @"config\php\php.ini");
+            _phpCgiPath = Path.Combine(_basePath, @"core\php", phpVersionFolder, "php-cgi.exe");
+            _phpWorkingDir = Path.Combine(_basePath, @"core\php", phpVersionFolder);
+            _phpIni = Path.Combine(_basePath, @"config\php", $"php_{_currentPhpVersion}.ini");
 
             _mysqlPath = Path.Combine(_basePath, @"core\mysql\bin\mysqld.exe");
             _mysqlClientPath = Path.Combine(_basePath, @"core\mysql\bin\mysql.exe");
@@ -771,47 +296,50 @@ namespace WPLaunchGUI
 
         private static readonly UTF8Encoding Utf8NoBom = new UTF8Encoding(false);
 
+        private void EnsurePhpConfigs()
+        {
+            var versions = new[] { "8.3", "8.5" };
+            string basePathUnix = _basePath.Replace("\\", "/");
+
+            foreach (var version in versions)
+            {
+                string phpIniPath = Path.Combine(_basePath, @"config\php", $"php_{version}.ini");
+                string versionFolder = $"php{version.Replace(".", "")}";
+
+                if (!File.Exists(phpIniPath))
+                {
+                    string phpIniContent = $@"[PHP]
+extension_dir = ""{basePathUnix}/core/php/{versionFolder}/ext""
+date.timezone = ""{Config.TimeZone}""
+display_errors = Off
+error_log = ""{basePathUnix}/logs/php_error_{version}.log""
+
+upload_max_filesize = {Config.UploadMaxSize}M
+post_max_size = {Config.UploadMaxSize}M
+memory_limit = {Config.MemoryLimit}M
+max_execution_time = 300
+max_input_time = 300
+
+extension=curl
+extension=gd
+extension=mbstring
+extension=mysqli
+extension=openssl
+extension=pdo_mysql
+extension=zip
+
+cgi.fix_pathinfo=1
+";
+                    File.WriteAllText(phpIniPath, phpIniContent, Utf8NoBom);
+                }
+            }
+        }
+
         private void EnsureConfigFiles()
         {
             string basePathUnix = _basePath.Replace("\\", "/");
-            string pmaPathUnix = _pmaPath.Replace("\\", "/");
 
-            // PHP.INI
-            string phpIniContent =
-                "[PHP]\n" +
-                $"extension_dir = \"{basePathUnix}/core/php/ext\"\n" +
-                $"date.timezone = \"{Config.TimeZone}\"\n" +
-                $"display_errors = Off\n" +
-                $"error_log = \"{basePathUnix}/logs/php_error.log\"\n\n" +
-                $"upload_max_filesize = {Config.UploadMaxSize}M\n" +
-                $"post_max_size = {Config.UploadMaxSize}M\n" +
-                $"memory_limit = {Config.MemoryLimit}M\n" +
-                $"max_execution_time = 300\n" +
-                $"max_input_time = 300\n\n" +
-                "extension=curl\n" +
-                "extension=gd\n" +
-                "extension=mbstring\n" +
-                "extension=mysqli\n" +
-                "extension=openssl\n" +
-                "extension=pdo_mysql\n" +
-                "extension=zip\n\n" +
-                "cgi.fix_pathinfo=1\n";
-
-            bool needPhpUpdate = true;
-            if (File.Exists(_phpIni))
-            {
-                string existing = File.ReadAllText(_phpIni);
-                if (existing.Contains($"upload_max_filesize = {Config.UploadMaxSize}M") &&
-                    existing.Contains($"post_max_size = {Config.UploadMaxSize}M"))
-                {
-                    needPhpUpdate = false;
-                }
-            }
-
-            if (needPhpUpdate)
-            {
-                File.WriteAllText(_phpIni, phpIniContent, Utf8NoBom);
-            }
+            EnsurePhpConfigs();
 
             // mime.types
             string mimePath = Path.Combine(_nginxConfDir, "mime.types");
@@ -908,15 +436,11 @@ namespace WPLaunchGUI
                 Directory.CreateDirectory(_templatePath);
             string templateUserIni = Path.Combine(_templatePath, ".user.ini");
             if (!File.Exists(templateUserIni))
-            {
                 File.WriteAllText(templateUserIni, userIniContent, Encoding.ASCII);
-            }
 
             // phpMyAdmin
             if (!Directory.Exists(_pmaPath))
-            {
                 Directory.CreateDirectory(_pmaPath);
-            }
 
             string testIndex = Path.Combine(_pmaPath, "index.php");
             if (!File.Exists(testIndex))
@@ -940,8 +464,519 @@ namespace WPLaunchGUI
             File.WriteAllText(infoFile, phpInfo, Encoding.UTF8);
         }
 
+        private void ApplyTheme()
+        {
+            var scheme = ThemeManager.CurrentScheme;
+            this.BackColor = scheme.BackgroundPrimary;
+
+            if (lblTitle != null) lblTitle.ForeColor = scheme.TextPrimary;
+            if (lblSubtitle != null) lblSubtitle.ForeColor = scheme.TextMuted;
+            if (lblVersion != null) lblVersion.ForeColor = scheme.TextMuted;  // КОЛІР ДЛЯ ВЕРСІЇ
+
+            if (listSites != null)
+            {
+                listSites.BackColor = scheme.BackgroundCard;
+                listSites.ForeColor = scheme.TextSecondary;
+                listSites.Invalidate();
+            }
+
+            if (txtLog != null)
+            {
+                txtLog.BackColor = scheme.LogBackground;
+                txtLog.ForeColor = scheme.TextSecondary;
+            }
+
+            bool running = IsProcessRunning("nginx") && IsProcessRunning("php-cgi") && IsProcessRunning("mysqld");
+            if (lblStatus != null)
+                lblStatus.ForeColor = running ? scheme.StatusRunning : scheme.StatusStopped;
+
+            if (btnTheme != null)
+            {
+                string themeIcon = ThemeManager.CurrentTheme == AppTheme.Light ? "☀️" : (ThemeManager.CurrentTheme == AppTheme.Dark ? "🌙" : "🌓");
+                btnTheme.Text = themeIcon;
+                btnTheme.ForeColor = scheme.TextPrimary;
+            }
+
+            if (comboPhpVersion != null)
+            {
+                comboPhpVersion.BackColor = scheme.BackgroundCard;
+                comboPhpVersion.ForeColor = scheme.TextSecondary;
+            }
+            if (lblPhpStatus != null) lblPhpStatus.ForeColor = scheme.TextMuted;
+
+            foreach (Control control in this.Controls)
+            {
+                if (control is Label label && label != lblTitle && label != lblSubtitle && label != lblStatus && label != btnTheme && label != lblPhpStatus && label != lblVersion)
+                {
+                    if (!(label is LinkLabel))
+                        label.ForeColor = scheme.TextMuted;
+                }
+                control.Invalidate();
+            }
+        }
+
+        private void CreateProfessionalLayout()
+        {
+            var scheme = ThemeManager.CurrentScheme;
+
+            // HEADER
+            lblTitle = new Label
+            {
+                Text = "WPronto",
+                Font = new Font("Segoe UI Semibold", 22f, FontStyle.Bold),
+                ForeColor = scheme.TextPrimary,
+                Location = new Point(ScaleInt(32), ScaleInt(25)),
+                AutoSize = true
+            };
+
+            lblSubtitle = new Label
+            {
+                Text = "Local WordPress Development Environment",
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+                ForeColor = scheme.TextMuted,
+                Location = new Point(ScaleInt(35), ScaleInt(70)),
+                AutoSize = true
+            };
+
+            lblStatus = new Label
+            {
+                Text = "● SERVER STOPPED",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = scheme.StatusStopped,
+                Location = new Point(ScaleInt(540), ScaleInt(32)),
+                Size = new Size(ScaleInt(220), ScaleInt(30)),
+                TextAlign = ContentAlignment.MiddleRight
+            };
+
+            // Кнопка теми
+            btnTheme = new Label
+            {
+                Text = ThemeManager.CurrentTheme == AppTheme.Light ? "☀️" : (ThemeManager.CurrentTheme == AppTheme.Dark ? "🌙" : "🌓"),
+                Size = new Size(ScaleInt(40), ScaleInt(32)),
+                Location = new Point(ScaleInt(770), ScaleInt(28)),
+                Font = new Font("Segoe UI", 14f),
+                Cursor = Cursors.Hand,
+                ForeColor = scheme.TextPrimary,
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            btnTheme.Click += BtnTheme_Click;
+
+            // PHP VERSION SELECTOR
+            Label lblPhpVersion = new Label
+            {
+                Text = "PHP:",
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold),
+                ForeColor = scheme.TextMuted,
+                Location = new Point(ScaleInt(32), ScaleInt(115)),
+                AutoSize = true
+            };
+
+            comboPhpVersion = new ComboBox
+            {
+                Location = new Point(ScaleInt(70), ScaleInt(110)),
+                Size = new Size(ScaleInt(70), ScaleInt(25)),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 9f),
+                BackColor = scheme.BackgroundCard,
+                ForeColor = scheme.TextSecondary
+            };
+
+            comboPhpVersion.Items.Clear();
+            comboPhpVersion.Items.Add("8.3");
+            comboPhpVersion.Items.Add("8.5");
+
+            if (comboPhpVersion.Items.Contains(_currentPhpVersion))
+                comboPhpVersion.SelectedItem = _currentPhpVersion;
+            else
+                comboPhpVersion.SelectedIndex = 0;
+
+            lblPhpStatus = new Label
+            {
+                Text = $"Active: {_currentPhpVersion}",
+                Location = new Point(ScaleInt(145), ScaleInt(114)),
+                Size = new Size(ScaleInt(100), ScaleInt(20)),
+                Font = new Font("Segoe UI", 7f),
+                ForeColor = scheme.TextMuted
+            };
+
+            comboPhpVersion.SelectedIndexChanged += async (s, e) =>
+            {
+                if (comboPhpVersion.SelectedItem != null)
+                {
+                    string newVersion = comboPhpVersion.SelectedItem.ToString();
+                    if (newVersion != _currentPhpVersion)
+                    {
+                        bool wasRunning = IsProcessRunning("nginx") && IsProcessRunning("php-cgi");
+
+                        if (wasRunning)
+                        {
+                            DialogResult result = MessageBox.Show(
+                                $"Switch PHP from {_currentPhpVersion} to {newVersion}?\n\nServer will restart.",
+                                "Change PHP Version",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question);
+
+                            if (result == DialogResult.Yes)
+                            {
+                                Log($"🔄 Switching PHP from {_currentPhpVersion} to {newVersion}...");
+                                BtnStop_Click(null, null);
+
+                                _currentPhpVersion = newVersion;
+                                SavePhpVersionSetting(newVersion);
+                                InitializePaths();
+
+                                await DelayAsync(1000);
+                                BtnStart_Click(null, null);
+
+                                lblPhpStatus.Text = $"Active: {newVersion}";
+                                Log($"✅ PHP switched to {newVersion}");
+                            }
+                            else
+                            {
+                                comboPhpVersion.SelectedItem = _currentPhpVersion;
+                            }
+                        }
+                        else
+                        {
+                            _currentPhpVersion = newVersion;
+                            SavePhpVersionSetting(newVersion);
+                            InitializePaths();
+                            lblPhpStatus.Text = $"Active: {newVersion} (next start)";
+                            Log($"PHP version set to {newVersion} (will be used on next start)");
+                        }
+                    }
+                }
+            };
+
+            // TOP BUTTONS PANEL
+            FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
+            {
+                Location = new Point(ScaleInt(260), ScaleInt(105)),
+                Size = new Size(ScaleInt(540), ScaleInt(50)),
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false
+            };
+
+            btnStart = new SoftButton("Start (Ctrl+S)", ButtonStyle.Primary, _dpiScale);
+            btnStart.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
+            btnStart.Click += BtnStart_Click;
+
+            btnStop = new SoftButton("Stop (Ctrl+X)", ButtonStyle.Danger, _dpiScale);
+            btnStop.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
+            btnStop.Click += BtnStop_Click;
+
+            btnOpenLocalhost = new SoftButton("Open Admin", ButtonStyle.Primary, _dpiScale);
+            btnOpenLocalhost.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
+            btnOpenLocalhost.Click += BtnOpenAdmin_Click;
+
+            btnPhpMyAdmin = new SoftButton("phpMyAdmin", ButtonStyle.Default, _dpiScale);
+            btnPhpMyAdmin.Margin = new Padding(ScaleInt(2), 0, 0, 0);
+            btnPhpMyAdmin.Click += BtnPhpMyAdmin_Click;
+
+            topButtonsPanel.Controls.AddRange(new Control[] { btnStart, btnStop, btnOpenLocalhost, btnPhpMyAdmin });
+
+            // SITES LABEL
+            Label lblSitesTitle = new Label
+            {
+                Text = "SITES",
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold),
+                ForeColor = scheme.TextMuted,
+                Location = new Point(ScaleInt(32), ScaleInt(155)),
+                AutoSize = true
+            };
+
+            // SITES CARD
+            ModernCard cardSites = new ModernCard(ScaleInt(32), ScaleInt(175), ScaleInt(260), ScaleInt(285), _dpiScale);
+            listSites = new ListBox
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.None,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+                ItemHeight = ScaleInt(32),
+                DrawMode = DrawMode.OwnerDrawFixed,
+                BackColor = scheme.BackgroundCard
+            };
+            listSites.DrawItem += ListSites_DrawItem;
+            cardSites.Controls.Add(listSites);
+
+            // LOG LABEL
+            Label lblLogsTitle = new Label
+            {
+                Text = "SERVER LOG",
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold),
+                ForeColor = scheme.TextMuted,
+                Location = new Point(ScaleInt(315), ScaleInt(155)),
+                AutoSize = true
+            };
+
+            // LOG CARD
+            ModernCard cardLogs = new ModernCard(ScaleInt(315), ScaleInt(175), ScaleInt(485), ScaleInt(285), _dpiScale);
+            txtLog = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.None,
+                ReadOnly = true,
+                BackColor = scheme.LogBackground,
+                ForeColor = scheme.TextSecondary,
+                Font = new Font("Consolas", 9f, FontStyle.Regular)
+            };
+            cardLogs.Controls.Add(txtLog);
+
+            // FOOTER BUTTONS
+            btnCreateSite = new SoftButton("Create Site", ButtonStyle.Primary, _dpiScale);
+            btnCreateSite.Location = new Point(ScaleInt(32), ScaleInt(480));
+            btnCreateSite.Width = ScaleInt(110);
+            btnCreateSite.Click += BtnCreateSite_Click;
+
+            btnBackupSite = new SoftButton("Backup Site", ButtonStyle.Success, _dpiScale);
+            btnBackupSite.Location = new Point(ScaleInt(152), ScaleInt(480));
+            btnBackupSite.Width = ScaleInt(110);
+            btnBackupSite.Click += BtnBackupSite_Click;
+
+            btnDeleteSite = new SoftButton("Delete Site", ButtonStyle.Danger, _dpiScale);
+            btnDeleteSite.Location = new Point(ScaleInt(272), ScaleInt(480));
+            btnDeleteSite.Width = ScaleInt(110);
+            btnDeleteSite.Click += BtnDeleteSite_Click;
+
+            btnLicense = new SoftButton("License", ButtonStyle.Default, _dpiScale);
+            btnLicense.Location = new Point(ScaleInt(392), ScaleInt(480));
+            btnLicense.Width = ScaleInt(90);
+            btnLicense.Click += BtnLicense_Click;
+
+            btnAbout = new SoftButton("About", ButtonStyle.Default, _dpiScale);
+            btnAbout.Location = new Point(ScaleInt(492), ScaleInt(480));
+            btnAbout.Width = ScaleInt(90);
+            btnAbout.Click += BtnAbout_Click;
+
+            // WEBSITE LINK
+            lnkWebsite = new LinkLabel
+            {
+                Text = "Official Website",
+                Location = new Point(ScaleInt(672), ScaleInt(480)),
+                AutoSize = true,
+                LinkColor = scheme.PrimaryColor,
+                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Regular)
+            };
+            lnkWebsite.LinkClicked += (s, e) =>
+            {
+                try { Process.Start(new ProcessStartInfo { FileName = "https://ovcharovcoder.github.io/wpronto", UseShellExecute = true }); }
+                catch { }
+            };
+
+            Label lblDev = new Label
+            {
+                Text = "© 2026 Andrii Ovcharov",
+                Location = new Point(ScaleInt(670), ScaleInt(500)),
+                AutoSize = true,
+                ForeColor = scheme.TextMuted,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular)
+            };
+
+            // =========================
+            // ВЕРСІЯ ПРОГРАМИ (НИЖНІЙ ЛІВИЙ КУТ)
+            // =========================
+            lblVersion = new Label
+            {
+                Text = "v 2.0",
+                Location = new Point(ScaleInt(32), ScaleInt(550)),
+                AutoSize = true,
+                ForeColor = scheme.TextMuted,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular)
+            };
+
+            // Додаємо всі елементи
+            this.Controls.Add(lblTitle);
+            this.Controls.Add(lblSubtitle);
+            this.Controls.Add(lblStatus);
+            this.Controls.Add(btnTheme);
+            this.Controls.Add(lblPhpVersion);
+            this.Controls.Add(comboPhpVersion);
+            this.Controls.Add(lblPhpStatus);
+            this.Controls.Add(topButtonsPanel);
+            this.Controls.Add(lblSitesTitle);
+            this.Controls.Add(cardSites);
+            this.Controls.Add(lblLogsTitle);
+            this.Controls.Add(cardLogs);
+            this.Controls.Add(btnCreateSite);
+            this.Controls.Add(btnBackupSite);
+            this.Controls.Add(btnDeleteSite);
+            this.Controls.Add(btnLicense);
+            this.Controls.Add(btnAbout);
+            this.Controls.Add(lnkWebsite);
+            this.Controls.Add(lblDev);
+            this.Controls.Add(lblVersion);  // ДОДАЄМО ЛЕЙБЛ ВЕРСІЇ
+        }
+
+        private void BtnTheme_Click(object sender, EventArgs e)
+        {
+            var currentTheme = ThemeManager.CurrentTheme;
+            AppTheme newTheme = currentTheme == AppTheme.Light ? AppTheme.Dark : (currentTheme == AppTheme.Dark ? AppTheme.System : AppTheme.Light);
+            ThemeManager.SetTheme(newTheme);
+            Log($"🎨 Theme changed to: {newTheme}");
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.S)) { BtnStart_Click(this, EventArgs.Empty); return true; }
+            if (keyData == (Keys.Control | Keys.X)) { BtnStop_Click(this, EventArgs.Empty); return true; }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         // =========================
-        // NEW IMPROVEMENTS
+        // HELPER METHODS FOR PHP VERSION
+        // =========================
+        private string LoadPhpVersionSetting()
+        {
+            try
+            {
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "phpversion.config");
+                if (File.Exists(configPath))
+                {
+                    string version = File.ReadAllText(configPath);
+                    if (version == "8.3" || version == "8.5")
+                        return version;
+                }
+            }
+            catch { }
+            return "8.3";
+        }
+
+        private void SavePhpVersionSetting(string version)
+        {
+            try
+            {
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "phpversion.config");
+                File.WriteAllText(configPath, version);
+            }
+            catch { }
+        }
+
+        // =========================
+        // SOFT BUTTON CLASS
+        // =========================
+        public class SoftButton : Button
+        {
+            private bool _isHovered = false, _isPressed = false;
+            private ButtonStyle _style;
+            private float _dpiScale;
+
+            public SoftButton(string text, ButtonStyle style = ButtonStyle.Default, float dpiScale = 1.0f)
+            {
+                this.Text = text;
+                _style = style;
+                _dpiScale = dpiScale;
+                int scale(int v) => (int)(v * dpiScale);
+                this.Size = new Size(scale(105), scale(34));
+                this.FlatStyle = FlatStyle.Flat;
+                this.FlatAppearance.BorderSize = 0;
+                this.Cursor = Cursors.Hand;
+                this.Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold);
+                this.Margin = new Padding(scale(2), 0, scale(2), 0);
+
+                this.MouseEnter += (s, e) => { _isHovered = true; Invalidate(); };
+                this.MouseLeave += (s, e) => { _isHovered = false; _isPressed = false; Invalidate(); };
+                this.MouseDown += (s, e) => { _isPressed = true; Invalidate(); };
+                this.MouseUp += (s, e) => { _isPressed = false; Invalidate(); };
+                ThemeManager.ThemeChanged += (theme) => Invalidate();
+            }
+
+            protected override void OnPaint(PaintEventArgs pevent)
+            {
+                pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                pevent.Graphics.Clear(this.Parent.BackColor);
+                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                int r = (int)(8 * _dpiScale);
+                var scheme = ThemeManager.CurrentScheme;
+                Color bg = scheme.BackgroundCard, border = scheme.BorderColor, text = scheme.TextSecondary;
+
+                if (_style == ButtonStyle.Primary) { bg = _isHovered ? scheme.PrimaryHover : scheme.PrimaryColor; border = bg; text = Color.White; }
+                else if (_style == ButtonStyle.Danger) { bg = _isHovered ? Color.FromArgb(200, 35, 51) : scheme.DangerColor; border = bg; text = Color.White; }
+                else if (_style == ButtonStyle.Success) { bg = _isHovered ? Color.FromArgb(40, 150, 60) : scheme.SuccessColor; border = bg; text = Color.White; }
+                else if (_isHovered) { bg = scheme.SelectionBackground; border = scheme.PrimaryColor; }
+                if (_isPressed) bg = scheme.BorderColor;
+
+                using (GraphicsPath path = CreateRoundedRect(rect, r))
+                {
+                    using (SolidBrush b = new SolidBrush(Enabled ? bg : scheme.BorderColor))
+                        pevent.Graphics.FillPath(b, path);
+                    using (Pen p = new Pen(Enabled ? border : scheme.BorderColor, 1.0f))
+                        pevent.Graphics.DrawPath(p, path);
+                }
+                TextRenderer.DrawText(pevent.Graphics, this.Text, this.Font, rect,
+                    Enabled ? text : scheme.TextMuted,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+        }
+
+        // =========================
+        // MODERN CARD CLASS
+        // =========================
+        public class ModernCard : Panel
+        {
+            private float _dpiScale;
+            public ModernCard(int x, int y, int w, int h, float dpiScale = 1.0f)
+            {
+                this._dpiScale = dpiScale;
+                this.Location = new Point(x, y);
+                this.Size = new Size(w, h);
+                this.BackColor = ThemeManager.CurrentScheme.BackgroundCard;
+                this.Padding = new Padding(1);
+                ThemeManager.ThemeChanged += (theme) => { this.BackColor = ThemeManager.CurrentScheme.BackgroundCard; this.Invalidate(); };
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                int r = (int)(8 * _dpiScale);
+                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                using (GraphicsPath path = CreateRoundedRect(rect, r))
+                {
+                    this.Region = new Region(path);
+                    using (Pen p = new Pen(ThemeManager.CurrentScheme.BorderColor, 1.0f))
+                        e.Graphics.DrawPath(p, path);
+                }
+            }
+        }
+
+        private void ListSites_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+            string text = listSites.Items[e.Index]?.ToString() ?? "";
+            var scheme = ThemeManager.CurrentScheme;
+            e.Graphics.FillRectangle(new SolidBrush(scheme.BackgroundCard), e.Bounds);
+            if (isSelected)
+            {
+                Rectangle highlightRect = new Rectangle(e.Bounds.X + (int)(5 * _dpiScale), e.Bounds.Y + (int)(2 * _dpiScale),
+                    e.Bounds.Width - (int)(10 * _dpiScale), e.Bounds.Height - (int)(4 * _dpiScale));
+                using (GraphicsPath path = CreateRoundedRect(highlightRect, (int)(5 * _dpiScale)))
+                {
+                    using (SolidBrush b = new SolidBrush(scheme.SelectionBackground))
+                        e.Graphics.FillPath(b, path);
+                    using (Pen p = new Pen(scheme.PrimaryColor, 1.0f))
+                        e.Graphics.DrawPath(p, path);
+                }
+            }
+            TextRenderer.DrawText(e.Graphics, text, listSites.Font, e.Bounds,
+                isSelected ? scheme.PrimaryColor : scheme.TextSecondary,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.LeftAndRightPadding);
+        }
+
+        public static GraphicsPath CreateRoundedRect(Rectangle rect, int r)
+        {
+            GraphicsPath path = new GraphicsPath();
+            path.AddArc(rect.X, rect.Y, r, r, 180, 90);
+            path.AddArc(rect.Right - r, rect.Y, r, r, 270, 90);
+            path.AddArc(rect.Right - r, rect.Bottom - r, r, r, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - r, r, r, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+
+        // =========================
+        // APPLICATION LOGIC
         // =========================
 
         private bool CheckRequiredFiles()
@@ -967,11 +1002,7 @@ namespace WPLaunchGUI
                 {
                     var result = client.BeginConnect("127.0.0.1", port, null, null);
                     var success = result.AsyncWaitHandle.WaitOne(500);
-                    if (success)
-                    {
-                        client.EndConnect(result);
-                        return false;
-                    }
+                    if (success) { client.EndConnect(result); return false; }
                 }
             }
             catch { }
@@ -982,7 +1013,6 @@ namespace WPLaunchGUI
         {
             _webPort = Config.DefaultPort;
             _pmaPort = Config.DefaultPort;
-
             if (!IsPortAvailable(Config.DefaultPort))
             {
                 _webPort = Config.AlternativePort;
@@ -1005,33 +1035,18 @@ namespace WPLaunchGUI
         {
             try
             {
-                var process = Process.Start(new ProcessStartInfo
-                {
-                    FileName = _nginxPath,
-                    Arguments = "-v",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardError = true
-                });
+                var process = Process.Start(new ProcessStartInfo { FileName = _nginxPath, Arguments = "-v", UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true });
                 return process?.StandardError.ReadToEnd() ?? "Unknown";
             }
             catch { return "Unknown"; }
         }
 
-        private bool IsValidWordPressInstall(string path)
-        {
-            return File.Exists(Path.Combine(path, "wp-admin", "index.php")) &&
-                   File.Exists(Path.Combine(path, "wp-includes", "version.php"));
-        }
+        private bool IsValidWordPressInstall(string path) => File.Exists(Path.Combine(path, "wp-admin", "index.php")) && File.Exists(Path.Combine(path, "wp-includes", "version.php"));
 
         private void ValidateTemplate()
         {
             if (!Directory.Exists(_templatePath)) return;
-
-            if (!IsValidWordPressInstall(_templatePath))
-            {
-                Log("⚠️ Warning: Template folder doesn't look like a valid WordPress installation");
-            }
+            if (!IsValidWordPressInstall(_templatePath)) Log("⚠️ Warning: Template folder doesn't look like a valid WordPress installation");
         }
 
         private void BackupDatabase(string dbName, string backupDir)
@@ -1039,43 +1054,20 @@ namespace WPLaunchGUI
             try
             {
                 string mysqldumpPath = Path.Combine(_basePath, @"core\mysql\bin\mysqldump.exe");
-
                 if (File.Exists(mysqldumpPath))
                 {
                     string backupFile = Path.Combine(backupDir, $"{dbName}.sql");
-
-                    var process = Process.Start(new ProcessStartInfo
-                    {
-                        FileName = mysqldumpPath,
-                        Arguments = $"-u root --databases {dbName} --result-file=\"{backupFile}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardError = true
-                    });
-
+                    var process = Process.Start(new ProcessStartInfo { FileName = mysqldumpPath, Arguments = $"-u root --databases {dbName} --result-file=\"{backupFile}\"", UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true });
                     if (process != null)
                     {
                         process.WaitForExit(10000);
-                        if (process.ExitCode == 0 && File.Exists(backupFile) && new FileInfo(backupFile).Length > 0)
-                        {
-                            Log($"   ✓ Database backup: {backupFile}");
-                        }
-                        else
-                        {
-                            string error = process.StandardError.ReadToEnd();
-                            Log($"   ⚠ Database backup failed: {error}");
-                        }
+                        if (process.ExitCode == 0 && File.Exists(backupFile) && new FileInfo(backupFile).Length > 0) Log($"   ✓ Database backup: {backupFile}");
+                        else Log($"   ⚠ Database backup failed: {process.StandardError.ReadToEnd()}");
                     }
                 }
-                else
-                {
-                    Log($"   ⚠ mysqldump not found, database backup skipped");
-                }
+                else Log($"   ⚠ mysqldump not found, database backup skipped");
             }
-            catch (Exception ex)
-            {
-                Log($"   ⚠ Database backup error: {ex.Message}");
-            }
+            catch (Exception ex) { Log($"   ⚠ Database backup error: {ex.Message}"); }
         }
 
         private void BackupSiteFiles(string sitePath, string backupDir)
@@ -1086,10 +1078,7 @@ namespace WPLaunchGUI
                 CopyDirectory(sitePath, filesBackupDir);
                 Log($"   ✓ Files backup: {filesBackupDir}");
             }
-            catch (Exception ex)
-            {
-                Log($"   ⚠ Files backup failed: {ex.Message}");
-            }
+            catch (Exception ex) { Log($"   ⚠ Files backup failed: {ex.Message}"); }
         }
 
         private void CreateFullBackup(string siteName)
@@ -1099,54 +1088,29 @@ namespace WPLaunchGUI
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string backupDir = Path.Combine(_backupPath, siteName, timestamp);
                 Directory.CreateDirectory(backupDir);
-
                 Log($"📦 Creating backup for '{siteName}'...");
-
-                // Бекап файлів сайту
                 string sitePath = Path.Combine(_wwwPath, siteName);
-                if (Directory.Exists(sitePath))
-                {
-                    BackupSiteFiles(sitePath, backupDir);
-                }
-                else
-                {
-                    Log($"   ⚠ Site folder not found: {sitePath}");
-                }
-
-                // Бекап бази даних
+                if (Directory.Exists(sitePath)) BackupSiteFiles(sitePath, backupDir);
+                else Log($"   ⚠ Site folder not found: {sitePath}");
                 string dbName = $"{siteName}_db";
                 BackupDatabase(dbName, backupDir);
-
-                Log($"✅ Backup completed successfully!");
-                Log($"   Location: {backupDir}");
-
-                MessageBox.Show($"Site '{siteName}' has been backed up successfully!\n\nBackup location:\n{backupDir}",
-                    "Backup Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Log($"✅ Backup completed successfully! Location: {backupDir}");
+                MessageBox.Show($"Site '{siteName}' has been backed up successfully!\n\nBackup location:\n{backupDir}", "Backup Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 Log($"❌ Backup failed: {ex.Message}");
-                MessageBox.Show($"Backup failed: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Backup failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private async Task DelayAsync(int milliseconds)
-        {
-            await Task.Delay(milliseconds);
-        }
-
-        // =========================
-        // APPLICATION LOGIC (CONTINUED)
-        // =========================
+        private async Task DelayAsync(int milliseconds) => await Task.Delay(milliseconds);
 
         private void CheckServerStatus()
         {
             bool running = IsProcessRunning("nginx") && IsProcessRunning("php-cgi") && IsProcessRunning("mysqld");
             if (this.InvokeRequired) { this.Invoke(new Action(CheckServerStatus)); return; }
-
             var scheme = ThemeManager.CurrentScheme;
-
             if (running)
             {
                 lblStatus.Text = "● SERVER RUNNING";
@@ -1191,17 +1155,15 @@ namespace WPLaunchGUI
             try
             {
                 btnStart.Enabled = false;
-
                 BtnStop_Click(sender, e);
                 await DelayAsync(800);
-
                 if (!CheckRequiredFiles())
                 {
                     Log("❌ Required files missing. Please check installation.");
                     return;
                 }
 
-                Log("Starting services...");
+                Log($"Starting services with PHP {_currentPhpVersion}...");
                 Log($"Nginx version: {GetNginxVersion()}");
                 Log($"Using port: {_webPort}");
 
@@ -1209,70 +1171,31 @@ namespace WPLaunchGUI
                 if (!Directory.Exists(Path.Combine(_mysqlData, "mysql")))
                 {
                     Log("Initializing MySQL...");
-                    var initProcess = Process.Start(new ProcessStartInfo
-                    {
-                        FileName = _mysqlPath,
-                        Arguments = $"--initialize-insecure --datadir=\"{mysqlDataUnix}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = _mysqlWorkingDir
-                    });
-                    if (initProcess != null)
-                        initProcess.WaitForExit(10000);
+                    var initProcess = Process.Start(new ProcessStartInfo { FileName = _mysqlPath, Arguments = $"--initialize-insecure --datadir=\"{mysqlDataUnix}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _mysqlWorkingDir });
+                    if (initProcess != null) initProcess.WaitForExit(10000);
                     Log("✓ MySQL initialized");
                 }
 
                 Log("Starting MySQL...");
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = _mysqlPath,
-                    Arguments = $"--datadir=\"{mysqlDataUnix}\" --bind-address=127.0.0.1 --port={Config.MysqlPort}",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = _mysqlWorkingDir
-                });
-
+                Process.Start(new ProcessStartInfo { FileName = _mysqlPath, Arguments = $"--datadir=\"{mysqlDataUnix}\" --bind-address=127.0.0.1 --port={Config.MysqlPort}", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _mysqlWorkingDir });
                 await DelayAsync(Config.ProcessStartDelay);
 
-                Log("Starting PHP-CGI...");
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = _phpCgiPath,
-                    Arguments = $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = _phpWorkingDir
-                });
-
+                Log($"Starting PHP-CGI {_currentPhpVersion}...");
+                Process.Start(new ProcessStartInfo { FileName = _phpCgiPath, Arguments = $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _phpWorkingDir });
                 await DelayAsync(Config.ProcessStartDelay);
 
                 Log("Starting Nginx...");
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = _nginxPath,
-                    Arguments = $"-c \"{_nginxConf}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = _nginxWorkingDir
-                });
-
+                Process.Start(new ProcessStartInfo { FileName = _nginxPath, Arguments = $"-c \"{_nginxConf}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _nginxWorkingDir });
                 await DelayAsync(Config.NginxStartDelay);
                 CheckServerStatus();
 
-                Log("✅ Server is running!");
+                Log($"✅ Server is running with PHP {_currentPhpVersion}!");
                 Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/ - WordPress");
                 Log($"   http://localhost:{(_pmaPort == 80 ? "" : _pmaPort.ToString())}/phpmyadmin - phpMyAdmin");
-                Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/info.php - PHP Info");
                 Log($"   Max upload size: {Config.UploadMaxSize}MB");
             }
-            catch (Exception ex)
-            {
-                Log($"❌ Start error: {ex.Message}");
-            }
-            finally
-            {
-                btnStart.Enabled = true;
-            }
+            catch (Exception ex) { Log($"❌ Start error: {ex.Message}"); }
+            finally { btnStart.Enabled = true; }
         }
 
         private void BtnStop_Click(object sender, EventArgs e)
@@ -1287,11 +1210,7 @@ namespace WPLaunchGUI
 
         private void BtnOpenAdmin_Click(object sender, EventArgs e)
         {
-            if (listSites.SelectedItem == null)
-            {
-                MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+            if (listSites.SelectedItem == null) { MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string siteName = listSites.SelectedItem.ToString() ?? "";
             string port = _webPort == 80 ? "" : $":{_webPort}";
             string url = $"http://{siteName}.wp{port}/wp-admin";
@@ -1311,29 +1230,16 @@ namespace WPLaunchGUI
         {
             string siteName = Microsoft.VisualBasic.Interaction.InputBox("Enter site name (letters, numbers, hyphens):", "Create New Site", "mynewsite");
             if (string.IsNullOrWhiteSpace(siteName)) return;
-
             siteName = Regex.Replace(siteName, @"[^a-zA-Z0-9\-]", "").ToLower();
             string sitePath = Path.Combine(_wwwPath, siteName);
-
-            if (Directory.Exists(sitePath))
-            {
-                MessageBox.Show("Site already exists!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!Directory.Exists(_templatePath))
-            {
-                MessageBox.Show("WordPress template not found.\n\nPlease add WordPress files to the 'template' folder.",
-                    "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            if (Directory.Exists(sitePath)) { MessageBox.Show("Site already exists!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (!Directory.Exists(_templatePath)) { MessageBox.Show("WordPress template not found.\n\nPlease add WordPress files to the 'template' folder.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
             try
             {
                 Log($"Creating site: {siteName}");
                 Directory.CreateDirectory(sitePath);
                 CopyDirectory(_templatePath, sitePath);
-
                 string userIniPath = Path.Combine(sitePath, ".user.ini");
                 string userIniContent = $"upload_max_filesize = {Config.UploadMaxSize}M\npost_max_size = {Config.UploadMaxSize}M\nmemory_limit = {Config.MemoryLimit}M\nmax_execution_time = 300\nmax_input_time = 300";
                 File.WriteAllText(userIniPath, userIniContent, Encoding.ASCII);
@@ -1341,20 +1247,7 @@ namespace WPLaunchGUI
 
                 string dbName = $"{siteName}_db";
                 string rootUnix = sitePath.Replace("\\", "/");
-
-                string nginxConfig =
-                    "server {\n" +
-                    $"    listen {_webPort};\n" +
-                    $"    server_name {siteName}.wp;\n" +
-                    $"    root \"{rootUnix}\";\n    index index.php;\n\n" +
-                    $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" +
-                    "    location / { try_files $uri $uri/ /index.php?$args; }\n\n" +
-                    "    location ~ /\\. { deny all; }\n\n" +
-                    "    location ~ \\.php$ {\n        try_files     $uri =404;\n" +
-                    "        fastcgi_pass  127.0.0.1:9000;\n" +
-                    "        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" +
-                    "        include       fastcgi_params;\n    }\n}\n";
-
+                string nginxConfig = "server {\n" + $"    listen {_webPort};\n" + $"    server_name {siteName}.wp;\n" + $"    root \"{rootUnix}\";\n    index index.php;\n\n" + $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" + "    location / { try_files $uri $uri/ /index.php?$args; }\n\n" + "    location ~ /\\. { deny all; }\n\n" + "    location ~ \\.php$ {\n        try_files     $uri =404;\n" + "        fastcgi_pass  127.0.0.1:9000;\n" + "        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" + "        include       fastcgi_params;\n    }\n}\n";
                 File.WriteAllText(Path.Combine(_sitesPath, $"{siteName}.conf"), nginxConfig, Utf8NoBom);
                 AddHostEntry($"{siteName}.wp");
                 CreateDatabase(dbName);
@@ -1368,108 +1261,38 @@ namespace WPLaunchGUI
                 Log($"   URL: {siteUrl}");
                 Log($"   Admin: {siteUrl}/wp-admin");
                 Log($"   Database: {dbName} (user: root, no password)");
-                Log($"   Upload limit: {Config.UploadMaxSize}MB");
-
-                if (MessageBox.Show($"Site '{siteName}' created!\n\nOpen WordPress install page?", "WPronto",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
+                if (MessageBox.Show($"Site '{siteName}' created!\n\nOpen WordPress install page?", "WPronto", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     Process.Start(new ProcessStartInfo { FileName = $"{siteUrl}/wp-admin/install.php", UseShellExecute = true });
-                }
             }
             catch (Exception ex) { Log($"❌ Error: {ex.Message}"); }
         }
 
-        // =========================
-        // BACKUP SITE BUTTON (Без видалення)
-        // =========================
         private void BtnBackupSite_Click(object sender, EventArgs e)
         {
-            if (listSites.SelectedItem == null)
-            {
-                MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
+            if (listSites.SelectedItem == null) { MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string siteName = listSites.SelectedItem.ToString();
-
-            DialogResult result = MessageBox.Show(
-                $"Create a backup of site '{siteName}'?\n\n" +
-                "This will create a copy of:\n" +
-                "✓ Website files\n" +
-                "✓ Database\n\n" +
-                "The site will remain active and unchanged.",
-                "Confirm Backup",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result != DialogResult.Yes) return;
-
-            CreateFullBackup(siteName);
+            if (MessageBox.Show($"Create a backup of site '{siteName}'?\n\nThis will create a copy of:\n✓ Website files\n✓ Database\n\nThe site will remain active.", "Confirm Backup", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                CreateFullBackup(siteName);
         }
 
         private void BtnDeleteSite_Click(object sender, EventArgs e)
         {
-            if (listSites.SelectedItem == null)
-            {
-                MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
+            if (listSites.SelectedItem == null) { MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string siteName = listSites.SelectedItem.ToString();
-
-            DialogResult result = MessageBox.Show(
-                $"Are you sure you want to delete site '{siteName}'?\n\n" +
-                "This will permanently delete:\n" +
-                "✓ Website files\n" +
-                "✓ Database\n" +
-                "✓ Nginx configuration\n" +
-                "✓ Hosts entry\n\n" +
-                "This action cannot be undone!",
-                "Confirm Delete",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
-
-            if (result != DialogResult.Yes) return;
+            if (MessageBox.Show($"Are you sure you want to delete site '{siteName}'?\n\nThis will permanently delete:\n✓ Website files\n✓ Database\n✓ Nginx configuration\n✓ Hosts entry\n\nThis action cannot be undone!", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
 
             try
             {
                 Log($"Deleting site: {siteName}");
-
                 string sitePath = Path.Combine(_wwwPath, siteName);
-                if (Directory.Exists(sitePath))
-                {
-                    Directory.Delete(sitePath, true);
-                    Log($"✓ Deleted folder: {sitePath}");
-                }
-
+                if (Directory.Exists(sitePath)) { Directory.Delete(sitePath, true); Log($"✓ Deleted folder: {sitePath}"); }
                 string confPath = Path.Combine(_sitesPath, $"{siteName}.conf");
-                if (File.Exists(confPath))
-                {
-                    File.Delete(confPath);
-                    Log($"✓ Deleted config: {siteName}.conf");
-                }
-
+                if (File.Exists(confPath)) { File.Delete(confPath); Log($"✓ Deleted config: {siteName}.conf"); }
                 string dbName = $"{siteName}_db";
+                try { Process.Start(new ProcessStartInfo { FileName = _mysqlClientPath, Arguments = $"-u root -e \"DROP DATABASE IF EXISTS {dbName}\"", UseShellExecute = false, CreateNoWindow = true })?.WaitForExit(5000); Log($"✓ Deleted database: {dbName}"); } catch (Exception ex) { Log($"⚠ Could not delete database: {ex.Message}"); }
                 try
                 {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = _mysqlClientPath,
-                        Arguments = $"-u root -e \"DROP DATABASE IF EXISTS {dbName}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    })?.WaitForExit(5000);
-                    Log($"✓ Deleted database: {dbName}");
-                }
-                catch (Exception ex)
-                {
-                    Log($"⚠ Could not delete database: {ex.Message}");
-                }
-
-                try
-                {
-                    string hostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),
-                        "drivers", "etc", "hosts");
+                    string hostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "drivers", "etc", "hosts");
                     string domain = $"{siteName}.wp";
                     if (File.Exists(hostsPath))
                     {
@@ -1478,23 +1301,13 @@ namespace WPLaunchGUI
                         Log($"✓ Removed hosts entry: {domain}");
                     }
                 }
-                catch
-                {
-                    Log("⚠ Could not remove hosts entry (run as admin)");
-                }
-
+                catch { Log("⚠ Could not remove hosts entry (run as admin)"); }
                 ReloadNginx();
                 LoadSites();
                 Log($"✅ Site '{siteName}' deleted successfully!");
-                MessageBox.Show($"Site '{siteName}' has been deleted.", "WPronto",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"Site '{siteName}' has been deleted.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex)
-            {
-                Log($"❌ Error deleting site: {ex.Message}");
-                MessageBox.Show($"Error deleting site: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            catch (Exception ex) { Log($"❌ Error deleting site: {ex.Message}"); MessageBox.Show($"Error deleting site: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
         private void CreateDatabase(string dbName)
@@ -1502,13 +1315,7 @@ namespace WPLaunchGUI
             try
             {
                 Log($"Creating database: {dbName}");
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = _mysqlClientPath,
-                    Arguments = $"-u root -e \"CREATE DATABASE IF NOT EXISTS {dbName};\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                })?.WaitForExit(5000);
+                Process.Start(new ProcessStartInfo { FileName = _mysqlClientPath, Arguments = $"-u root -e \"CREATE DATABASE IF NOT EXISTS {dbName};\"", UseShellExecute = false, CreateNoWindow = true })?.WaitForExit(5000);
                 Log($"✓ Created database: {dbName}");
             }
             catch (Exception ex) { Log($"⚠ Database error: {ex.Message}"); }
@@ -1517,23 +1324,18 @@ namespace WPLaunchGUI
         private void CreateWpConfig(string sitePath, string dbName, string siteName)
         {
             string port = _webPort == 80 ? "" : $":{_webPort}";
-
             string content = "<?php\n" +
-                "/**\n" +
-                " * WPronto automatically generates this configuration file\n" +
-                " */\n" +
+                "/** WPronto config */\n" +
                 "define( 'DB_NAME', '" + dbName + "' );\n" +
                 "define( 'DB_USER', 'root' );\n" +
                 "define( 'DB_PASSWORD', '' );\n" +
                 "define( 'DB_HOST', '127.0.0.1' );\n" +
                 "define( 'DB_CHARSET', 'utf8mb4' );\n" +
-                "define( 'DB_COLLATE', '' );\n" +
-                "\n" +
+                "define( 'DB_COLLATE', '' );\n\n" +
                 "if ( ! defined( 'WP_CLI' ) ) {\n" +
                 "    define( 'WP_SITEURL', 'http://" + siteName + ".wp" + port + "' );\n" +
                 "    define( 'WP_HOME',    'http://" + siteName + ".wp" + port + "' );\n" +
-                "}\n" +
-                "\n" +
+                "}\n\n" +
                 "define( 'AUTH_KEY',         '" + GenerateRandomKey(64) + "' );\n" +
                 "define( 'SECURE_AUTH_KEY',  '" + GenerateRandomKey(64) + "' );\n" +
                 "define( 'LOGGED_IN_KEY',    '" + GenerateRandomKey(64) + "' );\n" +
@@ -1541,44 +1343,30 @@ namespace WPLaunchGUI
                 "define( 'AUTH_SALT',        '" + GenerateRandomKey(64) + "' );\n" +
                 "define( 'SECURE_AUTH_SALT', '" + GenerateRandomKey(64) + "' );\n" +
                 "define( 'LOGGED_IN_SALT',   '" + GenerateRandomKey(64) + "' );\n" +
-                "define( 'NONCE_SALT',       '" + GenerateRandomKey(64) + "' );\n" +
-                "\n" +
+                "define( 'NONCE_SALT',       '" + GenerateRandomKey(64) + "' );\n\n" +
                 "$table_prefix = 'wp_';\n" +
                 "define( 'WP_DEBUG', false );\n" +
                 "define( 'WP_DEBUG_DISPLAY', false );\n" +
                 "define( 'WP_MEMORY_LIMIT', '" + Config.MemoryLimit + "M' );\n" +
-                "define( 'WP_MAX_MEMORY_LIMIT', '" + Config.MemoryLimit + "M' );\n" +
-                "\n" +
-                "if ( ! defined( 'ABSPATH' ) ) {\n" +
-                "    define( 'ABSPATH', __DIR__ . '/' );\n" +
-                "}\n" +
+                "define( 'WP_MAX_MEMORY_LIMIT', '" + Config.MemoryLimit + "M' );\n\n" +
+                "if ( ! defined( 'ABSPATH' ) ) define( 'ABSPATH', __DIR__ . '/' );\n" +
                 "require_once ABSPATH . 'wp-settings.php';";
-
             File.WriteAllText(Path.Combine(sitePath, "wp-config.php"), content, new UTF8Encoding(false));
-            Log($"✓ Created wp-config.php for {siteName} with {Config.MemoryLimit}MB memory limit");
+            Log($"✓ Created wp-config.php for {siteName}");
         }
 
         private string GenerateRandomKey(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?";
             var random = new Random();
-            var key = new char[length];
-            for (int i = 0; i < length; i++) key[i] = chars[random.Next(chars.Length)];
-            return new string(key);
+            return new string(Enumerable.Range(0, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
         }
 
         private void ReloadNginx()
         {
             try
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = _nginxPath,
-                    Arguments = "-s reload",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = _nginxWorkingDir
-                });
+                Process.Start(new ProcessStartInfo { FileName = _nginxPath, Arguments = "-s reload", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _nginxWorkingDir });
                 Log("✓ Nginx reloaded");
             }
             catch (Exception ex) { Log($"⚠ Reload error: {ex.Message}"); }
@@ -1590,8 +1378,7 @@ namespace WPLaunchGUI
             {
                 string hostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "drivers", "etc", "hosts");
                 string entry = $"127.0.0.1 {domain}";
-                string content = File.ReadAllText(hostsPath);
-                if (!content.Contains(entry))
+                if (!File.ReadAllText(hostsPath).Contains(entry))
                 {
                     File.AppendAllText(hostsPath, Environment.NewLine + entry);
                     Log($"✓ Hosts updated: {domain}");
@@ -1615,12 +1402,7 @@ namespace WPLaunchGUI
         private void ShowTextFile(string filename, string title)
         {
             string path = Path.Combine(_basePath, filename);
-            if (!File.Exists(path))
-            {
-                MessageBox.Show($"{filename} not found.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
+            if (!File.Exists(path)) { MessageBox.Show($"{filename} not found.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             Form f = new Form
             {
                 Text = title,
@@ -1631,9 +1413,7 @@ namespace WPLaunchGUI
                 MinimizeBox = false,
                 BackColor = ThemeManager.CurrentScheme.BackgroundCard,
             };
-
             Panel panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(ScaleInt(20), ScaleInt(15), ScaleInt(20), ScaleInt(15)) };
-
             RichTextBox txt = new RichTextBox
             {
                 Dock = DockStyle.Fill,
@@ -1644,7 +1424,6 @@ namespace WPLaunchGUI
                 Text = File.ReadAllText(path),
                 BorderStyle = BorderStyle.None,
             };
-
             panel.Controls.Add(txt);
             f.Controls.Add(panel);
             f.ShowDialog();

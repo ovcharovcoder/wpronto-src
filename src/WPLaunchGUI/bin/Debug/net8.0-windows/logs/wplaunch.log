@@ -1,97 +1,61 @@
-2026-05-24 21:56:53 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-24 22:32:38 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-24 22:32:38 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
-2026-05-24 22:32:46 - Stopping services...
-2026-05-24 22:32:46 - ✓ Stopped nginx
-2026-05-24 22:32:46 - ✓ Stopped nginx
-2026-05-24 22:32:46 - ✓ Stopped php-cgi
-2026-05-24 22:32:46 - ✓ Stopped mysqld
-2026-05-24 22:32:46 - ⏹️ All services stopped
-2026-05-26 07:12:39 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:12:47 - 🎨 Theme changed to: Dark
-2026-05-26 07:12:48 - 🎨 Theme changed to: System
-2026-05-26 07:12:49 - 🎨 Theme changed to: Light
-2026-05-26 07:12:50 - 🎨 Theme changed to: Dark
-2026-05-26 07:12:50 - 🎨 Theme changed to: System
-2026-05-26 07:12:59 - 🎨 Theme changed to: Light
-2026-05-26 07:13:00 - 🎨 Theme changed to: Dark
-2026-05-26 07:13:01 - 🎨 Theme changed to: System
-2026-05-26 07:13:02 - 🎨 Theme changed to: Light
-2026-05-26 07:13:03 - 🎨 Theme changed to: Dark
-2026-05-26 07:13:05 - 🎨 Theme changed to: System
-2026-05-26 07:13:06 - 🎨 Theme changed to: Light
-2026-05-26 07:13:08 - 🎨 Theme changed to: Dark
-2026-05-26 07:13:10 - 🎨 Theme changed to: System
-2026-05-26 07:13:10 - 🎨 Theme changed to: Light
-2026-05-26 07:13:13 - 🎨 Theme changed to: Dark
-2026-05-26 07:13:20 - Stopping services...
-2026-05-26 07:13:20 - ⏹️ All services stopped
-2026-05-26 07:13:20 - ❌ Missing: C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
-2026-05-26 07:13:20 - ❌ Missing: C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php-cgi.exe
-2026-05-26 07:13:20 - ❌ Missing: C:\WPLaunch\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
-2026-05-26 07:13:20 - ❌ Required files missing. Please check installation.
-2026-05-26 07:13:34 - 🎨 Theme changed to: System
-2026-05-26 07:13:42 - 🎨 Theme changed to: Light
-2026-05-26 07:13:43 - 🎨 Theme changed to: Dark
-2026-05-26 07:13:45 - 🎨 Theme changed to: System
-2026-05-26 07:13:46 - 🎨 Theme changed to: Light
-2026-05-26 07:17:35 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:17:37 - 🎨 Theme changed to: Dark
-2026-05-26 07:17:38 - 🎨 Theme changed to: System
-2026-05-26 07:17:39 - 🎨 Theme changed to: Light
-2026-05-26 07:17:40 - 🎨 Theme changed to: Dark
-2026-05-26 07:18:51 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:19:13 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:19:15 - 🎨 Theme changed to: System
-2026-05-26 07:19:53 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:20:15 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:20:31 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:20:45 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:21:04 - 🎨 Theme changed to: Light
-2026-05-26 07:21:05 - 🎨 Theme changed to: Dark
-2026-05-26 07:21:06 - 🎨 Theme changed to: System
-2026-05-26 07:21:08 - 🎨 Theme changed to: Light
-2026-05-26 07:21:09 - 🎨 Theme changed to: Dark
-2026-05-26 07:21:12 - 🎨 Theme changed to: System
-2026-05-26 07:21:40 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:21:42 - 🎨 Theme changed to: Light
-2026-05-26 07:21:43 - 🎨 Theme changed to: Dark
-2026-05-26 07:21:46 - 🎨 Theme changed to: System
-2026-05-26 07:21:46 - 🎨 Theme changed to: Light
-2026-05-26 07:21:47 - 🎨 Theme changed to: Dark
-2026-05-26 07:21:48 - 🎨 Theme changed to: System
-2026-05-26 07:21:48 - 🎨 Theme changed to: Light
-2026-05-26 07:21:49 - 🎨 Theme changed to: Dark
-2026-05-26 07:22:22 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:22:53 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:23:05 - 🎨 Theme changed to: System
-2026-05-26 07:23:07 - 🎨 Theme changed to: Light
-2026-05-26 07:23:08 - 🎨 Theme changed to: Dark
-2026-05-26 07:23:09 - 🎨 Theme changed to: System
-2026-05-26 07:23:12 - 🎨 Theme changed to: Light
-2026-05-26 07:23:12 - 🎨 Theme changed to: Dark
-2026-05-26 07:23:17 - 🎨 Theme changed to: System
-2026-05-26 07:23:20 - 🎨 Theme changed to: Light
-2026-05-26 07:23:21 - 🎨 Theme changed to: Dark
-2026-05-26 07:23:22 - 🎨 Theme changed to: System
-2026-05-26 07:23:23 - 🎨 Theme changed to: Light
-2026-05-26 07:23:23 - 🎨 Theme changed to: Dark
-2026-05-26 07:27:06 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:27:11 - 🎨 Theme changed to: System
-2026-05-26 07:30:43 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:31:00 - 🎨 Theme changed to: Light
-2026-05-26 07:31:01 - 🎨 Theme changed to: Dark
-2026-05-26 07:31:02 - 🎨 Theme changed to: System
-2026-05-26 07:31:03 - 🎨 Theme changed to: Light
-2026-05-26 07:31:30 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:31:43 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:32:01 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:32:32 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:32:44 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:32:50 - 🎨 Theme changed to: Dark
-2026-05-26 07:32:52 - 🎨 Theme changed to: System
-2026-05-26 07:33:10 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
-2026-05-26 07:33:16 - 🎨 Theme changed to: Light
-2026-05-26 07:33:17 - 🎨 Theme changed to: Dark
-2026-05-26 07:33:19 - 🎨 Theme changed to: System
-2026-05-27 18:52:01 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-29 18:08:54 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-29 18:08:54 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
+2026-05-29 18:08:56 - Stopping services...
+2026-05-29 18:08:56 - ✓ Stopped nginx
+2026-05-29 18:08:56 - ✓ Stopped nginx
+2026-05-29 18:08:56 - ✓ Stopped php-cgi
+2026-05-29 18:08:56 - ✓ Stopped mysqld
+2026-05-29 18:08:56 - ⏹️ All services stopped
+2026-05-29 18:35:18 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-29 18:35:18 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
+2026-05-29 18:35:25 - Stopping services...
+2026-05-29 18:35:25 - ✓ Stopped nginx
+2026-05-29 18:35:25 - ✓ Stopped nginx
+2026-05-29 18:35:25 - ✓ Stopped php-cgi
+2026-05-29 18:35:25 - ✓ Stopped mysqld
+2026-05-29 18:35:25 - ⏹️ All services stopped
+2026-05-29 18:35:42 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-29 18:36:04 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 12:55:24 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 12:55:39 - 🎨 Theme changed to: Dark
+2026-05-30 12:55:41 - 🎨 Theme changed to: System
+2026-05-30 12:55:42 - 🎨 Theme changed to: Light
+2026-05-30 12:55:43 - 🎨 Theme changed to: Dark
+2026-05-30 12:55:43 - 🎨 Theme changed to: System
+2026-05-30 13:02:19 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:03:50 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:03:54 - PHP version set to 8.5 (will be used on next start)
+2026-05-30 13:03:58 - PHP version set to 8.3 (will be used on next start)
+2026-05-30 13:15:23 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:15:40 - PHP version set to 8.5 (will be used on next start)
+2026-05-30 13:15:44 - PHP version set to 8.3 (will be used on next start)
+2026-05-30 13:15:57 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:16:05 - PHP version set to 8.5 (will be used on next start)
+2026-05-30 13:16:13 - Stopping services...
+2026-05-30 13:16:13 - ⏹️ All services stopped
+2026-05-30 13:16:14 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-05-30 13:16:14 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php85\php-cgi.exe
+2026-05-30 13:16:14 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-05-30 13:16:14 - ❌ Required files missing. Please check installation.
+2026-05-30 13:16:23 - Stopping services...
+2026-05-30 13:16:23 - ⏹️ All services stopped
+2026-05-30 13:16:24 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-05-30 13:16:24 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php85\php-cgi.exe
+2026-05-30 13:16:24 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-05-30 13:16:24 - ❌ Required files missing. Please check installation.
+2026-05-30 13:17:54 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:18:36 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:18:59 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:26:09 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:26:28 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:26:54 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:27:18 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:27:29 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:28:03 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-30 13:28:35 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-31 11:19:35 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-31 11:20:27 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-31 11:21:07 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-31 11:21:28 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-05-31 11:21:47 - PHP version set to 8.3 (will be used on next start)
+2026-05-31 11:21:49 - PHP version set to 8.5 (will be used on next start)
