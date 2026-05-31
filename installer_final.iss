@@ -48,9 +48,9 @@ Source: "C:\WPronto\about.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\WPronto\license.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\WPronto Manager"; Filename: "{app}\WProntoGUI.exe"; IconFilename: "{app}\app.ico"
+Name: "{group}\WPronto"; Filename: "{app}\WProntoGUI.exe"; IconFilename: "{app}\app.ico"
 Name: "{group}\Uninstall WPronto"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\WPronto Manager"; Filename: "{app}\WProntoGUI.exe"; IconFilename: "{app}\app.ico"; Tasks: desktopicon
+Name: "{autodesktop}\WPronto"; Filename: "{app}\WProntoGUI.exe"; IconFilename: "{app}\app.ico"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\WProntoGUI.exe"; Description: "WPronto — Local WP Environment"; Flags: postinstall nowait skipifsilent runascurrentuser

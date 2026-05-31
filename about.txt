@@ -4,7 +4,7 @@
 ═══════════════════════════════════════════════════════════════
 
 Version: 2.0
-Release Date: May 27, 2026
+Release Date: May 30, 2026
 Website: https://ovcharovcoder.github.io/wpronto
 Author: Andrii Ovcharov
 
@@ -24,8 +24,8 @@ no manual configuration, no hosting required.
 ═══════════════════════════════════════════════════════════════
 
 • WordPress         : 7.0
-• PHP               : 8.5.6
-• Nginx             : 1.26.0
+• PHP               : 8.3 and 8.5
+• Nginx             : 1.30.2
 • phpMyAdmin        : 5.2.3
 • MySQL (MariaDB)   : 11.4.2
 
@@ -117,8 +117,8 @@ STEP 4: RESTART THE SERVER
 Minimum:
 • OS               : Windows 10 / 11 (64-bit)
 • .NET Runtime     : .NET 8.0 Desktop Runtime
-• Disk Space       : 2GB free space (500MB core + space for sites)
-• RAM              : 8GB (recommended)
+• Disk Space       : 2GB free space (700MB core + space for sites)
+• RAM              : 8GB
 
 Recommended:
 • RAM              : 16GB (for multiple sites)
@@ -218,7 +218,6 @@ WPronto\
 
 • Bug Reports      : ovcharovcoder@gmail.com
 • Website          : https://ovcharovcoder.github.io/wpronto
-• GitHub           : https://github.com/ovcharovcoder/wpronto-src
 
 
 ═══════════════════════════════════════════════════════════════
