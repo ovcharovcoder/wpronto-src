@@ -650,7 +650,7 @@ cgi.fix_pathinfo=1
             // TOP BUTTONS PANEL
             FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
             {
-                Location = new Point(ScaleInt(260), ScaleInt(105)),
+                Location = new Point(ScaleInt(314), ScaleInt(105)),
                 Size = new Size(ScaleInt(540), ScaleInt(50)),
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false
