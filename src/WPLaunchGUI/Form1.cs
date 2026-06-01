@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -199,7 +199,6 @@ namespace WPLaunchGUI
         private Label btnTheme;
         private ComboBox comboPhpVersion;
         private Label lblPhpStatus;
-        private Label lblVersion;  // НОВА ЛЕЙБЛА ДЛЯ ВЕРСІЇ
 
         private float _dpiScale = 1.0f;
         private int ScaleInt(int value) => (int)(value * _dpiScale);
@@ -213,9 +212,9 @@ namespace WPLaunchGUI
             }
 
             this.Text = "WPronto — Local WP Environment";
-            this.Size = new Size(ScaleInt(840), ScaleInt(620));
-            this.MinimumSize = new Size(ScaleInt(840), ScaleInt(620));
-            this.MaximumSize = new Size(ScaleInt(840), ScaleInt(620));
+            this.Size = new Size(ScaleInt(840), ScaleInt(580));
+            this.MinimumSize = new Size(ScaleInt(840), ScaleInt(580));
+            this.MaximumSize = new Size(ScaleInt(840), ScaleInt(580));
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -471,7 +470,6 @@ cgi.fix_pathinfo=1
 
             if (lblTitle != null) lblTitle.ForeColor = scheme.TextPrimary;
             if (lblSubtitle != null) lblSubtitle.ForeColor = scheme.TextMuted;
-            if (lblVersion != null) lblVersion.ForeColor = scheme.TextMuted;  // КОЛІР ДЛЯ ВЕРСІЇ
 
             if (listSites != null)
             {
@@ -506,7 +504,7 @@ cgi.fix_pathinfo=1
 
             foreach (Control control in this.Controls)
             {
-                if (control is Label label && label != lblTitle && label != lblSubtitle && label != lblStatus && label != btnTheme && label != lblPhpStatus && label != lblVersion)
+                if (control is Label label && label != lblTitle && label != lblSubtitle && label != lblStatus && label != btnTheme && label != lblPhpStatus)
                 {
                     if (!(label is LinkLabel))
                         label.ForeColor = scheme.TextMuted;
@@ -519,10 +517,10 @@ cgi.fix_pathinfo=1
         {
             var scheme = ThemeManager.CurrentScheme;
 
-            // HEADER
+            // HEADER з версією v 2.0
             lblTitle = new Label
             {
-                Text = "WPronto",
+                Text = "WPronto v2.0",
                 Font = new Font("Segoe UI Semibold", 22f, FontStyle.Bold),
                 ForeColor = scheme.TextPrimary,
                 Location = new Point(ScaleInt(32), ScaleInt(25)),
@@ -652,7 +650,7 @@ cgi.fix_pathinfo=1
             // TOP BUTTONS PANEL
             FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
             {
-                Location = new Point(ScaleInt(260), ScaleInt(105)),
+                Location = new Point(ScaleInt(314), ScaleInt(105)),
                 Size = new Size(ScaleInt(540), ScaleInt(50)),
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false
@@ -753,7 +751,7 @@ cgi.fix_pathinfo=1
             lnkWebsite = new LinkLabel
             {
                 Text = "Official Website",
-                Location = new Point(ScaleInt(672), ScaleInt(480)),
+                Location = new Point(ScaleInt(660), ScaleInt(480)),
                 AutoSize = true,
                 LinkColor = scheme.PrimaryColor,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Regular)
@@ -767,25 +765,13 @@ cgi.fix_pathinfo=1
             Label lblDev = new Label
             {
                 Text = "© 2026 Andrii Ovcharov",
-                Location = new Point(ScaleInt(670), ScaleInt(500)),
+                Location = new Point(ScaleInt(660), ScaleInt(500)),
                 AutoSize = true,
                 ForeColor = scheme.TextMuted,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular)
             };
 
-            // =========================
-            // ВЕРСІЯ ПРОГРАМИ (НИЖНІЙ ЛІВИЙ КУТ)
-            // =========================
-            lblVersion = new Label
-            {
-                Text = "v 2.0",
-                Location = new Point(ScaleInt(32), ScaleInt(550)),
-                AutoSize = true,
-                ForeColor = scheme.TextMuted,
-                Font = new Font("Segoe UI", 9f, FontStyle.Regular)
-            };
-
-            // Додаємо всі елементи
+            // Додаємо всі елементи (лейбл версії БІЛЬШЕ НЕ ДОДАЄМО)
             this.Controls.Add(lblTitle);
             this.Controls.Add(lblSubtitle);
             this.Controls.Add(lblStatus);
@@ -805,7 +791,6 @@ cgi.fix_pathinfo=1
             this.Controls.Add(btnAbout);
             this.Controls.Add(lnkWebsite);
             this.Controls.Add(lblDev);
-            this.Controls.Add(lblVersion);  // ДОДАЄМО ЛЕЙБЛ ВЕРСІЇ
         }
 
         private void BtnTheme_Click(object sender, EventArgs e)
