@@ -650,7 +650,7 @@ cgi.fix_pathinfo=1
             // TOP BUTTONS PANEL
             FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
             {
-                Location = new Point(ScaleInt(314), ScaleInt(105)),
+                Location = new Point(ScaleInt(317), ScaleInt(105)),
                 Size = new Size(ScaleInt(540), ScaleInt(50)),
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false
@@ -751,7 +751,7 @@ cgi.fix_pathinfo=1
             lnkWebsite = new LinkLabel
             {
                 Text = "Official Website",
-                Location = new Point(ScaleInt(660), ScaleInt(480)),
+                Location = new Point(ScaleInt(656), ScaleInt(480)),
                 AutoSize = true,
                 LinkColor = scheme.PrimaryColor,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Regular)
@@ -765,7 +765,7 @@ cgi.fix_pathinfo=1
             Label lblDev = new Label
             {
                 Text = "© 2026 Andrii Ovcharov",
-                Location = new Point(ScaleInt(660), ScaleInt(500)),
+                Location = new Point(ScaleInt(656), ScaleInt(500)),
                 AutoSize = true,
                 ForeColor = scheme.TextMuted,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular)
