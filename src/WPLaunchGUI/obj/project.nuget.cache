@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "AtKv2ExkzNo=",
+  "dgSpecHash": "39bwjMYViZY=",
   "success": true,
   "projectFilePath": "C:\\WPronto\\src\\WPLaunchGUI\\WPLaunchGUI.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\datos\\.nuget\\packages\\microsoft.visualbasic\\10.3.0\\microsoft.visualbasic.10.3.0.nupkg.sha512"
+  ],
   "logs": []
 }

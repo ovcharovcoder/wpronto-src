@@ -1,10 +1,9 @@
+C:\WPronto\src\WPLaunchGUI\bin\Release\net8.0-windows\app.ico
 C:\WPronto\src\WPLaunchGUI\bin\Release\net8.0-windows\WProntoGUI.exe
 C:\WPronto\src\WPLaunchGUI\bin\Release\net8.0-windows\WProntoGUI.deps.json
 C:\WPronto\src\WPLaunchGUI\bin\Release\net8.0-windows\WProntoGUI.runtimeconfig.json
 C:\WPronto\src\WPLaunchGUI\bin\Release\net8.0-windows\WProntoGUI.dll
 C:\WPronto\src\WPLaunchGUI\bin\Release\net8.0-windows\WProntoGUI.pdb
-C:\WPronto\src\WPLaunchGUI\obj\Release\net8.0-windows\WPLaunchGUI.ThemeManager.resources
-C:\WPronto\src\WPLaunchGUI\obj\Release\net8.0-windows\WPLaunchGUI.csproj.GenerateResource.cache
 C:\WPronto\src\WPLaunchGUI\obj\Release\net8.0-windows\WPLaunchGUI.GeneratedMSBuildEditorConfig.editorconfig
 C:\WPronto\src\WPLaunchGUI\obj\Release\net8.0-windows\WPLaunchGUI.AssemblyInfoInputs.cache
 C:\WPronto\src\WPLaunchGUI\obj\Release\net8.0-windows\WPLaunchGUI.AssemblyInfo.cs

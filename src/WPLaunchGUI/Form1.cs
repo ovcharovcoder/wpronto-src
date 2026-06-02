@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -150,7 +150,7 @@ namespace WPLaunchGUI
         public const int NginxStartDelay = 3000;
     }
 
-    public class Form1 : Form
+    public partial class Form1 : Form
     {
         // LOGIC VARIABLES
         private System.Windows.Forms.Timer _statusTimer;
@@ -1415,3 +1415,4 @@ cgi.fix_pathinfo=1
         }
     }
 }
+
