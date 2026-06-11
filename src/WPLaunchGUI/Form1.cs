@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,10 +9,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace WPLaunchGUI
 {
-    public enum ButtonStyle { Default, Primary, Danger, Success }
+    public enum ButtonStyle { Default, Primary, Danger, Success, Warning }
     public enum AppTheme { Light, Dark, System }
 
     // =========================
@@ -58,7 +60,15 @@ namespace WPLaunchGUI
 
         private static void SaveThemeSetting(AppTheme theme)
         {
-            try { File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "theme.config"), theme.ToString()); } catch { }
+            try
+            {
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "theme.config");
+                string configDir = Path.GetDirectoryName(configPath);
+                if (!Directory.Exists(configDir) && !string.IsNullOrEmpty(configDir))
+                    Directory.CreateDirectory(configDir);
+                File.WriteAllText(configPath, theme.ToString());
+            }
+            catch { }
         }
 
         public static AppTheme LoadThemeSetting()
@@ -94,6 +104,7 @@ namespace WPLaunchGUI
         public abstract Color LogBackground { get; }
         public abstract Color StatusRunning { get; }
         public abstract Color StatusStopped { get; }
+        public abstract Color WarningColor { get; }
     }
 
     public class LightColorScheme : ColorScheme
@@ -113,6 +124,7 @@ namespace WPLaunchGUI
         public override Color LogBackground => Color.White;
         public override Color StatusRunning => Color.FromArgb(34, 197, 94);
         public override Color StatusStopped => Color.FromArgb(196, 43, 28);
+        public override Color WarningColor => Color.FromArgb(204, 102, 0);
     }
 
     public class DarkColorScheme : ColorScheme
@@ -132,6 +144,32 @@ namespace WPLaunchGUI
         public override Color LogBackground => Color.FromArgb(30, 30, 35);
         public override Color StatusRunning => Color.FromArgb(40, 167, 69);
         public override Color StatusStopped => Color.FromArgb(220, 53, 69);
+        public override Color WarningColor => Color.FromArgb(230, 115, 0);
+    }
+
+    // =========================
+    // BACKUP INFO CLASS
+    // =========================
+    public class BackupInfo
+    {
+        public string Path { get; set; }
+        public string Timestamp { get; set; }
+        public DateTime? BackupDate { get; set; }
+        public bool HasFiles { get; set; }
+        public bool HasDatabase { get; set; }
+        public string Size { get; set; }
+
+        public override string ToString()
+        {
+            string dateStr = BackupDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? Timestamp;
+            string status = "";
+            if (HasFiles && HasDatabase) status = "✓ Full backup";
+            else if (HasFiles) status = "📁 Files only";
+            else if (HasDatabase) status = "💾 DB only";
+            else status = "⚠ Incomplete";
+
+            return $"[{dateStr}] {status} ({Size})";
+        }
     }
 
     // =========================
@@ -189,9 +227,9 @@ namespace WPLaunchGUI
         private SoftButton btnPhpMyAdmin;
         private SoftButton btnCreateSite;
         private SoftButton btnBackupSite;
+        private SoftButton btnRestoreBackup;
         private SoftButton btnDeleteSite;
-        private SoftButton btnLicense;
-        private SoftButton btnAbout;
+        private SoftButton btnHelp;
         private Label lblStatus;
         private Label lblTitle;
         private Label lblSubtitle;
@@ -223,12 +261,14 @@ namespace WPLaunchGUI
             if (File.Exists(iconPath))
                 this.Icon = new Icon(iconPath);
 
-            // Завантаження збереженої PHP версії
             _currentPhpVersion = LoadPhpVersionSetting();
 
             InitializePaths();
             EnsureDirectories();
+
+            FindAvailablePorts();
             EnsureConfigFiles();
+
             CreateProfessionalLayout();
 
             var savedTheme = ThemeManager.LoadThemeSetting();
@@ -239,7 +279,8 @@ namespace WPLaunchGUI
             LoadSites();
             CheckServerStatus();
             ValidateTemplate();
-            FindAvailablePorts();
+            CheckAdminRights();
+            CleanupTempFiles();
 
             _statusTimer = new System.Windows.Forms.Timer();
             _statusTimer.Interval = 5000;
@@ -249,10 +290,38 @@ namespace WPLaunchGUI
 
         private string GetCurrentPhpFolder() => $"php{_currentPhpVersion.Replace(".", "")}";
 
+        private string GetCorrectBasePath()
+        {
+            string exePath = Application.ExecutablePath;
+            string exeDir = Path.GetDirectoryName(exePath);
+
+            if (Directory.Exists(Path.Combine(exeDir, "core", "nginx")))
+                return exeDir;
+
+            string currentDir = Environment.CurrentDirectory;
+            if (Directory.Exists(Path.Combine(currentDir, "core", "nginx")))
+                return currentDir;
+
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            if (Directory.Exists(Path.Combine(baseDir, "core", "nginx")))
+                return baseDir;
+
+            string parentDir = Path.GetDirectoryName(exeDir);
+            if (!string.IsNullOrEmpty(parentDir) && Directory.Exists(Path.Combine(parentDir, "core", "nginx")))
+                return parentDir;
+
+            return currentDir;
+        }
+
         private void InitializePaths()
         {
-            string exePath = AppDomain.CurrentDomain.BaseDirectory;
-            _basePath = exePath.TrimEnd('\\');
+            _basePath = GetCorrectBasePath();
+
+            if (_basePath == "C:\\" || _basePath == "C:" || string.IsNullOrWhiteSpace(_basePath))
+                _basePath = Path.GetDirectoryName(Application.ExecutablePath);
+
+            if (!Directory.Exists(_basePath))
+                _basePath = AppDomain.CurrentDomain.BaseDirectory;
 
             string phpVersionFolder = GetCurrentPhpFolder();
 
@@ -277,6 +346,13 @@ namespace WPLaunchGUI
             _tmpPath = Path.Combine(_basePath, @"tmp");
             _pmaPath = Path.Combine(_basePath, @"core\phpmyadmin");
             _backupPath = Path.Combine(_basePath, @"backups");
+
+            try
+            {
+                if (Directory.Exists(_logsPath))
+                    LogToFile($"Base path initialized to: {_basePath}");
+            }
+            catch { }
         }
 
         private void EnsureDirectories()
@@ -291,23 +367,24 @@ namespace WPLaunchGUI
             Directory.CreateDirectory(Path.Combine(_basePath, @"config\nginx"));
             Directory.CreateDirectory(_mysqlData);
             Directory.CreateDirectory(_backupPath);
+
+            string coreMysqlData = Path.Combine(_basePath, @"core\mysql\data");
+            if (!Directory.Exists(coreMysqlData))
+            {
+                Directory.CreateDirectory(coreMysqlData);
+                LogToFile("Created folder: core\\mysql\\data");
+            }
         }
 
         private static readonly UTF8Encoding Utf8NoBom = new UTF8Encoding(false);
 
-        private void EnsurePhpConfigs()
+        private void CreateSinglePhpConfig(string version)
         {
-            var versions = new[] { "8.3", "8.5" };
             string basePathUnix = _basePath.Replace("\\", "/");
+            string versionFolder = $"php{version.Replace(".", "")}";
+            string phpIniPath = Path.Combine(_basePath, @"config\php", $"php_{version}.ini");
 
-            foreach (var version in versions)
-            {
-                string phpIniPath = Path.Combine(_basePath, @"config\php", $"php_{version}.ini");
-                string versionFolder = $"php{version.Replace(".", "")}";
-
-                if (!File.Exists(phpIniPath))
-                {
-                    string phpIniContent = $@"[PHP]
+            string phpIniContent = $@"[PHP]
 extension_dir = ""{basePathUnix}/core/php/{versionFolder}/ext""
 date.timezone = ""{Config.TimeZone}""
 display_errors = Off
@@ -329,18 +406,37 @@ extension=zip
 
 cgi.fix_pathinfo=1
 ";
-                    File.WriteAllText(phpIniPath, phpIniContent, Utf8NoBom);
-                }
+            File.WriteAllText(phpIniPath, phpIniContent, Utf8NoBom);
+        }
+
+        private void EnsurePhpConfigs()
+        {
+            var versions = new[] { "8.3", "8.5" };
+            foreach (var version in versions)
+            {
+                string phpIniPath = Path.Combine(_basePath, @"config\php", $"php_{version}.ini");
+                if (!File.Exists(phpIniPath))
+                    CreateSinglePhpConfig(version);
             }
         }
 
         private void EnsureConfigFiles()
         {
-            string basePathUnix = _basePath.Replace("\\", "/");
+            if (File.Exists(_nginxConf))
+            {
+                string oldContent = File.ReadAllText(_nginxConf);
+                if (oldContent.Contains("C:/WPronto") || oldContent.Contains("C:/WPLaunch") || oldContent.Contains("D:/WPronto"))
+                {
+                    File.Delete(_nginxConf);
+                    LogToFile("Old nginx.conf with absolute paths removed, creating fresh one...");
+                }
+            }
 
             EnsurePhpConfigs();
 
-            // mime.types
+            if (!File.Exists(_phpIni))
+                CreateSinglePhpConfig(_currentPhpVersion);
+
             string mimePath = Path.Combine(_nginxConfDir, "mime.types");
             if (!File.Exists(mimePath))
             {
@@ -350,7 +446,6 @@ cgi.fix_pathinfo=1
                     "    application/zip zip;\n}\n", Utf8NoBom);
             }
 
-            // fastcgi_params
             string fastcgiPath = Path.Combine(_nginxConfDir, "fastcgi_params");
             if (!File.Exists(fastcgiPath))
             {
@@ -374,53 +469,49 @@ cgi.fix_pathinfo=1
                     "fastcgi_param  REDIRECT_STATUS    200;\n", Utf8NoBom);
             }
 
-            // NGINX.CONF
+            string basePathUnix = _basePath.Replace("\\", "/");
+
             string nginxConfig =
-                "worker_processes  1;\n" +
-                "events { worker_connections 1024; }\n\n" +
-                "http {\n" +
-                "    include       mime.types;\n" +
-                "    default_type  application/octet-stream;\n" +
-                "    sendfile      on;\n" +
-                "    keepalive_timeout 65;\n" +
-                $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" +
-                $"    access_log \"{basePathUnix}/logs/nginx_access.log\";\n" +
-                $"    error_log  \"{basePathUnix}/logs/nginx_error.log\";\n\n" +
-                "    server {\n" +
-                $"        listen       {_webPort};\n" +
-                "        server_name  localhost;\n" +
-                $"        root         \"{basePathUnix}/www/default\";\n" +
-                "        index        index.php index.html;\n\n" +
-                "        location / {\n" +
-                "            try_files $uri $uri/ =404;\n" +
-                "        }\n\n" +
-                "        location /phpmyadmin {\n" +
-                $"            root {basePathUnix}/core;\n" +
-                "            index index.php;\n\n" +
-                "            location ~ ^/phpmyadmin/(.+)\\.php$ {\n" +
-                "                try_files $uri =404;\n" +
-                "                fastcgi_pass 127.0.0.1:9000;\n" +
-                "                fastcgi_index index.php;\n" +
-                "                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" +
-                "                include fastcgi_params;\n" +
-                "            }\n\n" +
-                "            location ~* ^/phpmyadmin/(.+)\\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt)$ {\n" +
-                "                expires max;\n" +
-                "            }\n" +
-                "        }\n\n" +
-                "        location ~ \\.php$ {\n" +
-                "            try_files $uri =404;\n" +
-                "            fastcgi_pass 127.0.0.1:9000;\n" +
-                "            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" +
-                "            include fastcgi_params;\n" +
-                "        }\n" +
-                "    }\n\n" +
-                $"    include \"{basePathUnix}/config/nginx/sites/*.conf\";\n" +
-                "}\n";
+    "worker_processes  1;\n" +
+    "events { worker_connections 1024; }\n\n" +
+    "http {\n" +
+    "    include       mime.types;\n" +
+    "    default_type  application/octet-stream;\n" +
+    "    sendfile      on;\n" +
+    "    keepalive_timeout 65;\n" +
+    $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" +
+    $"    access_log   \"{basePathUnix}/logs/nginx_access.log\";\n" +
+    $"    error_log    \"{basePathUnix}/logs/nginx_error.log\";\n\n" +
+    "    server {\n" +
+    $"        listen       {_webPort};\n" +
+    "        server_name  localhost;\n" +
+    $"        root         \"{basePathUnix}/www/default\";\n" +
+    "        index        index.php index.html;\n\n" +
+    "        location / {\n" +
+    "            try_files $uri $uri/ =404;\n" +
+    "        }\n\n" +
+    "        location /phpmyadmin {\n" +
+    $"            alias {basePathUnix}/core/phpmyadmin;\n" +
+    "            index index.php;\n\n" +
+    "            location ~ \\.php$ {\n" +
+    "                fastcgi_pass 127.0.0.1:9000;\n" +
+    "                fastcgi_param SCRIPT_FILENAME $request_filename;\n" +
+    "                include fastcgi_params;\n" +
+    "            }\n" +
+    "        }\n\n" +
+    "        location ~ \\.php$ {\n" +
+    "            try_files $uri =404;\n" +
+    "            fastcgi_pass 127.0.0.1:9000;\n" +
+    "            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" +
+    "            include fastcgi_params;\n" +
+    "        }\n" +
+    "    }\n\n" +
+    $"    include {basePathUnix}/config/nginx/sites/*.conf;\n" +
+    "}\n";
 
             File.WriteAllText(_nginxConf, nginxConfig, Encoding.ASCII);
+            LogToFile($"nginx.conf created at: {_nginxConf}");
 
-            // .user.ini для сайтів
             string userIniContent = $"upload_max_filesize = {Config.UploadMaxSize}M\npost_max_size = {Config.UploadMaxSize}M\nmemory_limit = {Config.MemoryLimit}M\nmax_execution_time = 300\nmax_input_time = 300";
 
             string defaultUserIni = Path.Combine(_wwwPath, "default", ".user.ini");
@@ -437,7 +528,6 @@ cgi.fix_pathinfo=1
             if (!File.Exists(templateUserIni))
                 File.WriteAllText(templateUserIni, userIniContent, Encoding.ASCII);
 
-            // phpMyAdmin
             if (!Directory.Exists(_pmaPath))
                 Directory.CreateDirectory(_pmaPath);
 
@@ -448,19 +538,21 @@ cgi.fix_pathinfo=1
                 File.WriteAllText(testIndex, phpContent, Encoding.UTF8);
             }
 
-            // info.php
             string infoFile = Path.Combine(_wwwPath, "default", "info.php");
-            string phpInfo = "<?php\n" +
-                "echo '<h2>PHP Settings</h2>';\n" +
-                "echo '<strong>upload_max_filesize:</strong> ' . ini_get('upload_max_filesize') . '<br>';\n" +
-                "echo '<strong>post_max_size:</strong> ' . ini_get('post_max_size') . '<br>';\n" +
-                "echo '<strong>memory_limit:</strong> ' . ini_get('memory_limit') . '<br>';\n" +
-                "echo '<strong>max_execution_time:</strong> ' . ini_get('max_execution_time') . ' seconds<br>';\n" +
-                "echo '<hr>';\n" +
-                "echo '<h2>WordPress Upload Limits</h2>';\n" +
-                "echo '<p>You can upload files up to <strong style=\"color:green\">' . ini_get('upload_max_filesize') . '</strong></p>';\n" +
-                "?>";
-            File.WriteAllText(infoFile, phpInfo, Encoding.UTF8);
+            if (!File.Exists(infoFile))
+            {
+                string phpInfo = "<?php\n" +
+                    "echo '<h2>PHP Settings</h2>';\n" +
+                    "echo '<strong>upload_max_filesize:</strong> ' . ini_get('upload_max_filesize') . '<br>';\n" +
+                    "echo '<strong>post_max_size:</strong> ' . ini_get('post_max_size') . '<br>';\n" +
+                    "echo '<strong>memory_limit:</strong> ' . ini_get('memory_limit') . '<br>';\n" +
+                    "echo '<strong>max_execution_time:</strong> ' . ini_get('max_execution_time') . ' seconds<br>';\n" +
+                    "echo '<hr>';\n" +
+                    "echo '<h2>WordPress Upload Limits</h2>';\n" +
+                    "echo '<p>You can upload files up to <strong style=\"color:green\">' . ini_get('upload_max_filesize') . '</strong></p>';\n" +
+                    "?>";
+                File.WriteAllText(infoFile, phpInfo, Encoding.UTF8);
+            }
         }
 
         private void ApplyTheme()
@@ -517,10 +609,9 @@ cgi.fix_pathinfo=1
         {
             var scheme = ThemeManager.CurrentScheme;
 
-            // HEADER з версією v 2.0
             lblTitle = new Label
             {
-                Text = "WPronto v2.0",
+                Text = "WPronto v3.0",
                 Font = new Font("Segoe UI Semibold", 22f, FontStyle.Bold),
                 ForeColor = scheme.TextPrimary,
                 Location = new Point(ScaleInt(32), ScaleInt(25)),
@@ -546,7 +637,6 @@ cgi.fix_pathinfo=1
                 TextAlign = ContentAlignment.MiddleRight
             };
 
-            // Кнопка теми
             btnTheme = new Label
             {
                 Text = ThemeManager.CurrentTheme == AppTheme.Light ? "☀️" : (ThemeManager.CurrentTheme == AppTheme.Dark ? "🌙" : "🌓"),
@@ -560,7 +650,6 @@ cgi.fix_pathinfo=1
             };
             btnTheme.Click += BtnTheme_Click;
 
-            // PHP VERSION SELECTOR
             Label lblPhpVersion = new Label
             {
                 Text = "PHP:",
@@ -617,7 +706,7 @@ cgi.fix_pathinfo=1
 
                             if (result == DialogResult.Yes)
                             {
-                                Log($"🔄 Switching PHP from {_currentPhpVersion} to {newVersion}...");
+                                Log($"Switching PHP from {_currentPhpVersion} to {newVersion}...");
                                 BtnStop_Click(null, null);
 
                                 _currentPhpVersion = newVersion;
@@ -628,7 +717,7 @@ cgi.fix_pathinfo=1
                                 BtnStart_Click(null, null);
 
                                 lblPhpStatus.Text = $"Active: {newVersion}";
-                                Log($"✅ PHP switched to {newVersion}");
+                                Log($"PHP switched to {newVersion}");
                             }
                             else
                             {
@@ -647,7 +736,6 @@ cgi.fix_pathinfo=1
                 }
             };
 
-            // TOP BUTTONS PANEL
             FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
             {
                 Location = new Point(ScaleInt(317), ScaleInt(105)),
@@ -656,11 +744,11 @@ cgi.fix_pathinfo=1
                 WrapContents = false
             };
 
-            btnStart = new SoftButton("Start (Ctrl+S)", ButtonStyle.Primary, _dpiScale);
+            btnStart = new SoftButton("Start", ButtonStyle.Primary, _dpiScale);
             btnStart.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
             btnStart.Click += BtnStart_Click;
 
-            btnStop = new SoftButton("Stop (Ctrl+X)", ButtonStyle.Danger, _dpiScale);
+            btnStop = new SoftButton("Stop", ButtonStyle.Danger, _dpiScale);
             btnStop.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
             btnStop.Click += BtnStop_Click;
 
@@ -674,7 +762,6 @@ cgi.fix_pathinfo=1
 
             topButtonsPanel.Controls.AddRange(new Control[] { btnStart, btnStop, btnOpenLocalhost, btnPhpMyAdmin });
 
-            // SITES LABEL
             Label lblSitesTitle = new Label
             {
                 Text = "SITES",
@@ -684,7 +771,6 @@ cgi.fix_pathinfo=1
                 AutoSize = true
             };
 
-            // SITES CARD
             ModernCard cardSites = new ModernCard(ScaleInt(32), ScaleInt(175), ScaleInt(260), ScaleInt(285), _dpiScale);
             listSites = new ListBox
             {
@@ -698,7 +784,6 @@ cgi.fix_pathinfo=1
             listSites.DrawItem += ListSites_DrawItem;
             cardSites.Controls.Add(listSites);
 
-            // LOG LABEL
             Label lblLogsTitle = new Label
             {
                 Text = "SERVER LOG",
@@ -708,7 +793,6 @@ cgi.fix_pathinfo=1
                 AutoSize = true
             };
 
-            // LOG CARD
             ModernCard cardLogs = new ModernCard(ScaleInt(315), ScaleInt(175), ScaleInt(485), ScaleInt(285), _dpiScale);
             txtLog = new RichTextBox
             {
@@ -721,37 +805,35 @@ cgi.fix_pathinfo=1
             };
             cardLogs.Controls.Add(txtLog);
 
-            // FOOTER BUTTONS
-            btnCreateSite = new SoftButton("Create Site", ButtonStyle.Primary, _dpiScale);
+            btnCreateSite = new SoftButton("Create", ButtonStyle.Primary, _dpiScale);
             btnCreateSite.Location = new Point(ScaleInt(32), ScaleInt(480));
-            btnCreateSite.Width = ScaleInt(110);
+            btnCreateSite.Width = ScaleInt(100);
             btnCreateSite.Click += BtnCreateSite_Click;
 
-            btnBackupSite = new SoftButton("Backup Site", ButtonStyle.Success, _dpiScale);
-            btnBackupSite.Location = new Point(ScaleInt(152), ScaleInt(480));
-            btnBackupSite.Width = ScaleInt(110);
+            btnBackupSite = new SoftButton("Backup", ButtonStyle.Success, _dpiScale);
+            btnBackupSite.Location = new Point(ScaleInt(140), ScaleInt(480));
+            btnBackupSite.Width = ScaleInt(90);
             btnBackupSite.Click += BtnBackupSite_Click;
 
-            btnDeleteSite = new SoftButton("Delete Site", ButtonStyle.Danger, _dpiScale);
-            btnDeleteSite.Location = new Point(ScaleInt(272), ScaleInt(480));
-            btnDeleteSite.Width = ScaleInt(110);
+            btnRestoreBackup = new SoftButton("Restore", ButtonStyle.Warning, _dpiScale);
+            btnRestoreBackup.Location = new Point(ScaleInt(240), ScaleInt(480));
+            btnRestoreBackup.Width = ScaleInt(90);
+            btnRestoreBackup.Click += BtnRestoreBackup_Click;
+
+            btnDeleteSite = new SoftButton("Delete", ButtonStyle.Danger, _dpiScale);
+            btnDeleteSite.Location = new Point(ScaleInt(340), ScaleInt(480));
+            btnDeleteSite.Width = ScaleInt(90);
             btnDeleteSite.Click += BtnDeleteSite_Click;
 
-            btnLicense = new SoftButton("License", ButtonStyle.Default, _dpiScale);
-            btnLicense.Location = new Point(ScaleInt(392), ScaleInt(480));
-            btnLicense.Width = ScaleInt(90);
-            btnLicense.Click += BtnLicense_Click;
+            btnHelp = new SoftButton("Help", ButtonStyle.Default, _dpiScale);
+            btnHelp.Location = new Point(ScaleInt(440), ScaleInt(480));
+            btnHelp.Width = ScaleInt(90);
+            btnHelp.Click += BtnHelp_Click;
 
-            btnAbout = new SoftButton("About", ButtonStyle.Default, _dpiScale);
-            btnAbout.Location = new Point(ScaleInt(492), ScaleInt(480));
-            btnAbout.Width = ScaleInt(90);
-            btnAbout.Click += BtnAbout_Click;
-
-            // WEBSITE LINK
             lnkWebsite = new LinkLabel
             {
-                Text = "Official Website",
-                Location = new Point(ScaleInt(656), ScaleInt(480)),
+                Text = "Official website",
+                Location = new Point(ScaleInt(660), ScaleInt(480)),
                 AutoSize = true,
                 LinkColor = scheme.PrimaryColor,
                 Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Regular)
@@ -765,13 +847,12 @@ cgi.fix_pathinfo=1
             Label lblDev = new Label
             {
                 Text = "© 2026 Andrii Ovcharov",
-                Location = new Point(ScaleInt(656), ScaleInt(500)),
+                Location = new Point(ScaleInt(660), ScaleInt(500)),
                 AutoSize = true,
                 ForeColor = scheme.TextMuted,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular)
             };
 
-            // Додаємо всі елементи (лейбл версії БІЛЬШЕ НЕ ДОДАЄМО)
             this.Controls.Add(lblTitle);
             this.Controls.Add(lblSubtitle);
             this.Controls.Add(lblStatus);
@@ -786,9 +867,9 @@ cgi.fix_pathinfo=1
             this.Controls.Add(cardLogs);
             this.Controls.Add(btnCreateSite);
             this.Controls.Add(btnBackupSite);
+            this.Controls.Add(btnRestoreBackup);
             this.Controls.Add(btnDeleteSite);
-            this.Controls.Add(btnLicense);
-            this.Controls.Add(btnAbout);
+            this.Controls.Add(btnHelp);
             this.Controls.Add(lnkWebsite);
             this.Controls.Add(lblDev);
         }
@@ -798,19 +879,54 @@ cgi.fix_pathinfo=1
             var currentTheme = ThemeManager.CurrentTheme;
             AppTheme newTheme = currentTheme == AppTheme.Light ? AppTheme.Dark : (currentTheme == AppTheme.Dark ? AppTheme.System : AppTheme.Light);
             ThemeManager.SetTheme(newTheme);
-            Log($"🎨 Theme changed to: {newTheme}");
+            Log($"Theme changed to: {newTheme}");
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == (Keys.Control | Keys.S)) { BtnStart_Click(this, EventArgs.Empty); return true; }
-            if (keyData == (Keys.Control | Keys.X)) { BtnStop_Click(this, EventArgs.Empty); return true; }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.S))
+            {
+                BtnStart_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.X))
+            {
+                BtnStop_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.A))
+            {
+                BtnOpenAdmin_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.P))
+            {
+                BtnPhpMyAdmin_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.C))
+            {
+                BtnCreateSite_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.B))
+            {
+                BtnBackupSite_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.R))
+            {
+                BtnRestoreBackup_Click(this, EventArgs.Empty);
+                return true;
+            }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.D))
+            {
+                BtnDeleteSite_Click(this, EventArgs.Empty);
+                return true;
+            }
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        // =========================
-        // HELPER METHODS FOR PHP VERSION
-        // =========================
         private string LoadPhpVersionSetting()
         {
             try
@@ -837,9 +953,151 @@ cgi.fix_pathinfo=1
             catch { }
         }
 
-        // =========================
-        // SOFT BUTTON CLASS
-        // =========================
+        private void CheckAdminRights()
+        {
+            try
+            {
+                using (var identity = System.Security.Principal.WindowsIdentity.GetCurrent())
+                {
+                    var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                    bool isAdmin = principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+
+                    if (!isAdmin)
+                    {
+                        Log("NOT RUNNING AS ADMINISTRATOR!");
+                        Log("Hosts file modification will not work!");
+                        Log("Virtual domains like site.wp will not resolve!");
+                        Log("Please restart the program as Administrator for full functionality");
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void CleanupTempFiles()
+        {
+            try
+            {
+                string tempPath = Path.GetTempPath();
+                var oldBatFiles = Directory.GetFiles(tempPath, "mysql_restore_*.bat");
+                foreach (var file in oldBatFiles)
+                {
+                    try
+                    {
+                        if (File.GetCreationTime(file) < DateTime.Now.AddDays(-1))
+                            File.Delete(file);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        private bool ValidatePreStartup()
+        {
+            Log("Running pre-startup checks...");
+
+            if (!IsPortAvailable(Config.PhpPort))
+            {
+                Log($"PHP port {Config.PhpPort} is busy!");
+                return false;
+            }
+
+            if (!IsPortAvailable(Config.MysqlPort))
+            {
+                Log($"MySQL port {Config.MysqlPort} is busy!");
+                return false;
+            }
+
+            if (!CheckRequiredFiles())
+            {
+                Log("Required files are missing!");
+                return false;
+            }
+
+            if (!File.Exists(_phpIni))
+            {
+                Log($"PHP config not found: {_phpIni}");
+                CreateSinglePhpConfig(_currentPhpVersion);
+                if (!File.Exists(_phpIni))
+                {
+                    Log($"Failed to create PHP config!");
+                    return false;
+                }
+            }
+
+            string[] requiredDirs = { _wwwPath, _logsPath, _tmpPath, _mysqlData };
+            foreach (var dir in requiredDirs)
+            {
+                if (!Directory.Exists(dir))
+                {
+                    try { Directory.CreateDirectory(dir); }
+                    catch (Exception ex)
+                    {
+                        Log($"Cannot create directory {dir}: {ex.Message}");
+                        return false;
+                    }
+                }
+            }
+
+            Log("Pre-startup checks passed!");
+            return true;
+        }
+
+        private bool StartProcessSafely(string fileName, string arguments, string workingDirectory, string processName)
+        {
+            try
+            {
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = workingDirectory
+                });
+
+                if (process == null)
+                {
+                    Log($"Failed to start {processName}");
+                    return false;
+                }
+
+                System.Threading.Thread.Sleep(500);
+
+                string processExeName = Path.GetFileNameWithoutExtension(fileName).ToLower();
+                if (!IsProcessRunning(processExeName))
+                {
+                    Log($"{processName} started but exited immediately");
+                    return false;
+                }
+
+                Log($"{processName} started successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log($"Error starting {processName}: {ex.Message}");
+                return false;
+            }
+        }
+
+        private bool IsPhpOnlySite(string siteName)
+        {
+            if (siteName == "php") return true;
+
+            string sitePath = Path.Combine(_wwwPath, siteName);
+            if (!Directory.Exists(sitePath)) return false;
+
+            if (File.Exists(Path.Combine(sitePath, "wp-config.php")))
+                return false;
+
+            if (File.Exists(Path.Combine(sitePath, "wp-admin", "index.php")))
+                return false;
+
+            return true;
+        }
+
         public class SoftButton : Button
         {
             private bool _isHovered = false, _isPressed = false;
@@ -878,6 +1136,7 @@ cgi.fix_pathinfo=1
                 if (_style == ButtonStyle.Primary) { bg = _isHovered ? scheme.PrimaryHover : scheme.PrimaryColor; border = bg; text = Color.White; }
                 else if (_style == ButtonStyle.Danger) { bg = _isHovered ? Color.FromArgb(200, 35, 51) : scheme.DangerColor; border = bg; text = Color.White; }
                 else if (_style == ButtonStyle.Success) { bg = _isHovered ? Color.FromArgb(40, 150, 60) : scheme.SuccessColor; border = bg; text = Color.White; }
+                else if (_style == ButtonStyle.Warning) { bg = _isHovered ? Color.FromArgb(255, 120, 0) : scheme.WarningColor; border = bg; text = Color.White; }
                 else if (_isHovered) { bg = scheme.SelectionBackground; border = scheme.PrimaryColor; }
                 if (_isPressed) bg = scheme.BorderColor;
 
@@ -894,9 +1153,6 @@ cgi.fix_pathinfo=1
             }
         }
 
-        // =========================
-        // MODERN CARD CLASS
-        // =========================
         public class ModernCard : Panel
         {
             private float _dpiScale;
@@ -929,9 +1185,16 @@ cgi.fix_pathinfo=1
             if (e.Index < 0) return;
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            string text = listSites.Items[e.Index]?.ToString() ?? "";
+            string siteName = listSites.Items[e.Index]?.ToString() ?? "";
             var scheme = ThemeManager.CurrentScheme;
+
             e.Graphics.FillRectangle(new SolidBrush(scheme.BackgroundCard), e.Bounds);
+
+            // Визначаємо тип сайту та додаємо відповідну іконку
+            bool isPhpOnly = IsPhpOnlySite(siteName);
+            string icon = isPhpOnly ? "🐘 " : "🌐 ";
+            string displayText = icon + siteName;
+
             if (isSelected)
             {
                 Rectangle highlightRect = new Rectangle(e.Bounds.X + (int)(5 * _dpiScale), e.Bounds.Y + (int)(2 * _dpiScale),
@@ -944,7 +1207,8 @@ cgi.fix_pathinfo=1
                         e.Graphics.DrawPath(p, path);
                 }
             }
-            TextRenderer.DrawText(e.Graphics, text, listSites.Font, e.Bounds,
+
+            TextRenderer.DrawText(e.Graphics, displayText, listSites.Font, e.Bounds,
                 isSelected ? scheme.PrimaryColor : scheme.TextSecondary,
                 TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.LeftAndRightPadding);
         }
@@ -960,10 +1224,6 @@ cgi.fix_pathinfo=1
             return path;
         }
 
-        // =========================
-        // APPLICATION LOGIC
-        // =========================
-
         private bool CheckRequiredFiles()
         {
             string[] required = { _nginxPath, _phpCgiPath, _mysqlPath };
@@ -972,7 +1232,7 @@ cgi.fix_pathinfo=1
             {
                 if (!File.Exists(file))
                 {
-                    Log($"❌ Missing: {file}");
+                    LogToFile($"Missing: {file}");
                     allExist = false;
                 }
             }
@@ -983,13 +1243,18 @@ cgi.fix_pathinfo=1
         {
             try
             {
-                using (var client = new System.Net.Sockets.TcpClient())
+                using (var client = new TcpClient())
                 {
                     var result = client.BeginConnect("127.0.0.1", port, null, null);
-                    var success = result.AsyncWaitHandle.WaitOne(500);
-                    if (success) { client.EndConnect(result); return false; }
+                    var success = result.AsyncWaitHandle.WaitOne(1000);
+                    if (success)
+                    {
+                        client.EndConnect(result);
+                        return false;
+                    }
                 }
             }
+            catch (SocketException) { return true; }
             catch { }
             return true;
         }
@@ -1001,8 +1266,7 @@ cgi.fix_pathinfo=1
             if (!IsPortAvailable(Config.DefaultPort))
             {
                 _webPort = Config.AlternativePort;
-                _pmaPort = Config.AlternativePort + 1;
-                Log($"⚠️ Port {Config.DefaultPort} is busy, using alternative ports: {_webPort} and {_pmaPort}");
+                LogToFile($"Port {Config.DefaultPort} is busy, using alternative port: {_webPort}");
             }
         }
 
@@ -1010,7 +1274,13 @@ cgi.fix_pathinfo=1
         {
             try
             {
-                string logFile = Path.Combine(_logsPath, "wplaunch.log");
+                if (string.IsNullOrEmpty(_logsPath))
+                    return;
+
+                if (!Directory.Exists(_logsPath))
+                    Directory.CreateDirectory(_logsPath);
+
+                string logFile = Path.Combine(_logsPath, "wpronto.log");
                 File.AppendAllText(logFile, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}{Environment.NewLine}");
             }
             catch { }
@@ -1031,7 +1301,7 @@ cgi.fix_pathinfo=1
         private void ValidateTemplate()
         {
             if (!Directory.Exists(_templatePath)) return;
-            if (!IsValidWordPressInstall(_templatePath)) Log("⚠️ Warning: Template folder doesn't look like a valid WordPress installation");
+            if (!IsValidWordPressInstall(_templatePath)) LogToFile("Warning: Template folder doesn't look like a valid WordPress installation");
         }
 
         private void BackupDatabase(string dbName, string backupDir)
@@ -1046,13 +1316,13 @@ cgi.fix_pathinfo=1
                     if (process != null)
                     {
                         process.WaitForExit(10000);
-                        if (process.ExitCode == 0 && File.Exists(backupFile) && new FileInfo(backupFile).Length > 0) Log($"   ✓ Database backup: {backupFile}");
-                        else Log($"   ⚠ Database backup failed: {process.StandardError.ReadToEnd()}");
+                        if (process.ExitCode == 0 && File.Exists(backupFile) && new FileInfo(backupFile).Length > 0) LogToFile($"   Database backup: {backupFile}");
+                        else LogToFile($"   Database backup failed: {process.StandardError.ReadToEnd()}");
                     }
                 }
-                else Log($"   ⚠ mysqldump not found, database backup skipped");
+                else LogToFile($"   mysqldump not found, database backup skipped");
             }
-            catch (Exception ex) { Log($"   ⚠ Database backup error: {ex.Message}"); }
+            catch (Exception ex) { LogToFile($"   Database backup error: {ex.Message}"); }
         }
 
         private void BackupSiteFiles(string sitePath, string backupDir)
@@ -1061,9 +1331,9 @@ cgi.fix_pathinfo=1
             {
                 string filesBackupDir = Path.Combine(backupDir, "files");
                 CopyDirectory(sitePath, filesBackupDir);
-                Log($"   ✓ Files backup: {filesBackupDir}");
+                LogToFile($"   Files backup: {filesBackupDir}");
             }
-            catch (Exception ex) { Log($"   ⚠ Files backup failed: {ex.Message}"); }
+            catch (Exception ex) { LogToFile($"   Files backup failed: {ex.Message}"); }
         }
 
         private void CreateFullBackup(string siteName)
@@ -1073,19 +1343,461 @@ cgi.fix_pathinfo=1
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string backupDir = Path.Combine(_backupPath, siteName, timestamp);
                 Directory.CreateDirectory(backupDir);
-                Log($"📦 Creating backup for '{siteName}'...");
+                Log($"Creating backup for '{siteName}'...");
                 string sitePath = Path.Combine(_wwwPath, siteName);
                 if (Directory.Exists(sitePath)) BackupSiteFiles(sitePath, backupDir);
-                else Log($"   ⚠ Site folder not found: {sitePath}");
+                else Log($"   Site folder not found: {sitePath}");
                 string dbName = $"{siteName}_db";
                 BackupDatabase(dbName, backupDir);
-                Log($"✅ Backup completed successfully! Location: {backupDir}");
+                Log($"Backup completed successfully! Location: {backupDir}");
                 MessageBox.Show($"Site '{siteName}' has been backed up successfully!\n\nBackup location:\n{backupDir}", "Backup Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                Log($"❌ Backup failed: {ex.Message}");
+                Log($"Backup failed: {ex.Message}");
                 MessageBox.Show($"Backup failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private List<BackupInfo> GetAvailableBackups(string siteName)
+        {
+            var backups = new List<BackupInfo>();
+            string backupPath = Path.Combine(_backupPath, siteName);
+
+            if (!Directory.Exists(backupPath))
+                return backups;
+
+            foreach (string dir in Directory.GetDirectories(backupPath))
+            {
+                string timestamp = Path.GetFileName(dir);
+                DateTime? backupDate = null;
+
+                if (DateTime.TryParseExact(timestamp, "yyyy-MM-dd_HH-mm-ss",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out DateTime parsed))
+                {
+                    backupDate = parsed;
+                }
+
+                bool hasFiles = Directory.Exists(Path.Combine(dir, "files"));
+                bool hasDatabase = File.Exists(Path.Combine(dir, $"{siteName}_db.sql"));
+
+                backups.Add(new BackupInfo
+                {
+                    Path = dir,
+                    Timestamp = timestamp,
+                    BackupDate = backupDate,
+                    HasFiles = hasFiles,
+                    HasDatabase = hasDatabase,
+                    Size = GetDirectorySize(dir)
+                });
+            }
+
+            return backups.OrderByDescending(b => b.BackupDate).ToList();
+        }
+
+        private string GetDirectorySize(string path)
+        {
+            try
+            {
+                long size = 0;
+                var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+                foreach (var file in files)
+                    size += new FileInfo(file).Length;
+
+                string[] sizes = { "B", "KB", "MB", "GB" };
+                int order = 0;
+                double len = size;
+                while (len >= 1024 && order < sizes.Length - 1)
+                {
+                    order++;
+                    len /= 1024;
+                }
+                return $"{len:0.##} {sizes[order]}";
+            }
+            catch { return "Unknown"; }
+        }
+
+        private async Task RestoreFromBackup(string siteName, BackupInfo backup)
+        {
+            try
+            {
+                Log($"Restoring site '{siteName}' from backup: {backup.Timestamp}");
+
+                string sitePath = Path.Combine(_wwwPath, siteName);
+
+                if (!Directory.Exists(sitePath))
+                {
+                    Log($"   Site folder doesn't exist, creating: {sitePath}");
+                    Directory.CreateDirectory(sitePath);
+                }
+
+                bool wasNginxRunning = IsProcessRunning("nginx");
+                bool wasPhpRunning = IsProcessRunning("php-cgi");
+                bool wasMysqlRunning = IsProcessRunning("mysqld");
+
+                if (wasNginxRunning || wasPhpRunning)
+                {
+                    Log("   Stopping web server (Nginx + PHP) for restore...");
+                    foreach (var name in new[] { "nginx", "php-cgi" })
+                        foreach (var p in Process.GetProcessesByName(name))
+                            try { p.Kill(); p.WaitForExit(2000); Log($"   Stopped {name}"); } catch { }
+                    await DelayAsync(1000);
+                }
+
+                if (!wasMysqlRunning)
+                {
+                    Log("   MySQL is not running! Starting MySQL...");
+                    string mysqlDataUnix = _mysqlData.Replace("\\", "/");
+                    Process.Start(new ProcessStartInfo { FileName = _mysqlPath, Arguments = $"--datadir=\"{mysqlDataUnix}\" --bind-address=127.0.0.1 --port={Config.MysqlPort}", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _mysqlWorkingDir });
+                    await DelayAsync(Config.ProcessStartDelay);
+                }
+
+                string filesBackup = Path.Combine(backup.Path, "files");
+                if (Directory.Exists(filesBackup))
+                {
+                    Log("   Restoring files...");
+
+                    foreach (var dir in Directory.GetDirectories(sitePath))
+                    {
+                        try { Directory.Delete(dir, true); } catch { }
+                    }
+                    foreach (var file in Directory.GetFiles(sitePath))
+                    {
+                        try { File.Delete(file); } catch { }
+                    }
+
+                    CopyDirectory(filesBackup, sitePath);
+                    Log($"   Files restored from: {filesBackup}");
+                }
+                else
+                {
+                    Log("   No files backup found, skipping...");
+                }
+
+                string dbBackup = Path.Combine(backup.Path, $"{siteName}_db.sql");
+                if (File.Exists(dbBackup))
+                {
+                    Log("   Restoring database...");
+
+                    string dbName = $"{siteName}_db";
+                    string mysqlPath = _mysqlClientPath;
+
+                    Log($"   Dropping old database '{dbName}'...");
+                    var dropProcess = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = mysqlPath,
+                        Arguments = $"-u root -e \"DROP DATABASE IF EXISTS {dbName}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardError = true
+                    });
+                    if (dropProcess != null)
+                    {
+                        dropProcess.WaitForExit(5000);
+                        Log($"   Old database dropped");
+                    }
+
+                    Log($"   Creating new database '{dbName}'...");
+                    var createProcess = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = mysqlPath,
+                        Arguments = $"-u root -e \"CREATE DATABASE {dbName}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardError = true
+                    });
+                    if (createProcess != null)
+                    {
+                        createProcess.WaitForExit(5000);
+                        Log($"   New database created");
+                    }
+
+                    long fileSize = new FileInfo(dbBackup).Length;
+                    int timeoutMs = 60000;
+
+                    if (fileSize > 100 * 1024 * 1024)
+                        timeoutMs = 300000;
+                    if (fileSize > 500 * 1024 * 1024)
+                        timeoutMs = 600000;
+                    if (fileSize > 1024 * 1024 * 1024)
+                        timeoutMs = 1200000;
+
+                    string sizeStr = "";
+                    if (fileSize < 1024 * 1024)
+                        sizeStr = $"{fileSize / 1024:F1} KB";
+                    else if (fileSize < 1024 * 1024 * 1024)
+                        sizeStr = $"{fileSize / (1024.0 * 1024.0):F1} MB";
+                    else
+                        sizeStr = $"{fileSize / (1024.0 * 1024.0 * 1024.0):F1} GB";
+
+                    Log($"   Importing database from backup (size: {sizeStr}, timeout: {timeoutMs / 1000} sec)...");
+
+                    DateTime startTime = DateTime.Now;
+
+                    string batFile = Path.Combine(Path.GetTempPath(), $"mysql_restore_{Guid.NewGuid()}.bat");
+                    string batContent = $"\"{mysqlPath}\" -u root --default-character-set=utf8mb4 {dbName} < \"{dbBackup}\"";
+                    File.WriteAllText(batFile, batContent, Encoding.ASCII);
+
+                    var importProcess = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = batFile,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardError = true
+                    });
+
+                    if (importProcess != null)
+                    {
+                        importProcess.WaitForExit(timeoutMs);
+                        double elapsedSeconds = (DateTime.Now - startTime).TotalSeconds;
+
+                        if (importProcess.ExitCode == 0)
+                        {
+                            Log($"   Database restored successfully! (Completed in {elapsedSeconds:F1} seconds)");
+                        }
+                        else
+                        {
+                            string error = await importProcess.StandardError.ReadToEndAsync();
+                            Log($"   Database restore completed with exit code {importProcess.ExitCode} (took {elapsedSeconds:F1} sec)");
+                            if (!string.IsNullOrEmpty(error))
+                                Log($"   Error: {error}");
+                        }
+                    }
+
+                    try { File.Delete(batFile); } catch { }
+                }
+                else
+                {
+                    Log("   No database backup found, skipping...");
+                }
+
+                string confPath = Path.Combine(_sitesPath, $"{siteName}.conf");
+                string rootUnix = sitePath.Replace("\\", "/");
+
+                if (!File.Exists(confPath))
+                {
+                    Log("   Creating Nginx config...");
+                }
+
+                string nginxConfig = "server {\n" +
+                    $"    listen {_webPort};\n" +
+                    $"    server_name {siteName}.wp;\n" +
+                    $"    root \"{rootUnix}\";\n" +
+                    "    index index.php index.html;\n\n" +
+                    $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" +
+                    "    location / { try_files $uri $uri/ /index.php?$args; }\n\n" +
+                    "    location ~ /\\. { deny all; }\n\n" +
+                    "    location ~ \\.php$ {\n" +
+                    "        try_files     $uri =404;\n" +
+                    "        fastcgi_pass  127.0.0.1:9000;\n" +
+                    "        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" +
+                    "        include       fastcgi_params;\n" +
+                    "    }\n}\n";
+
+                File.WriteAllText(confPath, nginxConfig, Utf8NoBom);
+                Log("   Nginx config created/updated");
+
+                AddHostEntry($"{siteName}.wp");
+
+                if (wasNginxRunning || wasPhpRunning)
+                {
+                    Log("   Restarting web server...");
+                    await DelayAsync(500);
+
+                    Log($"   Starting PHP-CGI {_currentPhpVersion}...");
+                    Process.Start(new ProcessStartInfo { FileName = _phpCgiPath, Arguments = $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _phpWorkingDir });
+                    await DelayAsync(Config.ProcessStartDelay);
+
+                    Log("   Starting Nginx...");
+                    Process.Start(new ProcessStartInfo { FileName = _nginxPath, Arguments = $"-c \"{_nginxConf}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _nginxWorkingDir });
+                    await DelayAsync(Config.NginxStartDelay);
+                }
+
+                LoadSites();
+
+                for (int i = 0; i < listSites.Items.Count; i++)
+                {
+                    if (listSites.Items[i].ToString() == siteName)
+                    {
+                        listSites.SelectedIndex = i;
+                        break;
+                    }
+                }
+
+                Log($"Site '{siteName}' restored successfully from backup: {backup.Timestamp}");
+                MessageBox.Show($"Site '{siteName}' has been restored successfully from backup!\n\nBackup: {backup.Timestamp}",
+                    "Restore Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                Log($"Restore failed: {ex.Message}");
+                MessageBox.Show($"Restore failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void BtnRestoreBackup_Click(object sender, EventArgs e)
+        {
+            List<BackupInfo> availableBackups = new List<BackupInfo>();
+            string preselectedSite = null;
+
+            if (listSites.SelectedItem != null)
+            {
+                preselectedSite = listSites.SelectedItem.ToString();
+                availableBackups = GetAvailableBackups(preselectedSite);
+            }
+            else
+            {
+                if (Directory.Exists(_backupPath))
+                {
+                    foreach (string siteDir in Directory.GetDirectories(_backupPath))
+                    {
+                        string siteName = Path.GetFileName(siteDir);
+                        var backups = GetAvailableBackups(siteName);
+                        foreach (var backup in backups)
+                        {
+                            availableBackups.Add(backup);
+                        }
+                    }
+                }
+            }
+
+            if (availableBackups.Count == 0)
+            {
+                MessageBox.Show("No backups found!", "No Backups",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            Form backupForm = new Form
+            {
+                Text = string.IsNullOrEmpty(preselectedSite) ? "Select Backup to Restore" : $"Restore Backup - {preselectedSite}",
+                Size = new Size(ScaleInt(550), ScaleInt(450)),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = ThemeManager.CurrentScheme.BackgroundPrimary
+            };
+
+            ListBox backupList = new ListBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 10f),
+                ItemHeight = 30,
+                BackColor = ThemeManager.CurrentScheme.BackgroundCard,
+                ForeColor = ThemeManager.CurrentScheme.TextSecondary,
+                BorderStyle = BorderStyle.None
+            };
+
+            foreach (var backup in availableBackups)
+                backupList.Items.Add(backup);
+
+            if (backupList.Items.Count > 0)
+                backupList.SelectedIndex = 0;
+
+            Panel buttonPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = ScaleInt(70),
+                Padding = new Padding(ScaleInt(10)),
+                BackColor = ThemeManager.CurrentScheme.BackgroundPrimary
+            };
+
+            Button btnRestore = new Button
+            {
+                Text = "Restore",
+                DialogResult = DialogResult.OK,
+                Size = new Size(ScaleInt(100), ScaleInt(34)),
+                BackColor = ThemeManager.CurrentScheme.PrimaryColor,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                FlatAppearance = { BorderSize = 0 }
+            };
+
+            btnRestore.Paint += (s, ev) =>
+            {
+                Button btn = (Button)s;
+                GraphicsPath path = CreateRoundedRect(new Rectangle(0, 0, btn.Width, btn.Height), 8);
+                btn.Region = new Region(path);
+            };
+
+            Button btnCancel = new Button
+            {
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel,
+                Size = new Size(ScaleInt(100), ScaleInt(34)),
+                BackColor = Color.Transparent,
+                ForeColor = ThemeManager.CurrentScheme.TextSecondary,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI Semibold", 8.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                FlatAppearance = { BorderSize = 1, BorderColor = ThemeManager.CurrentScheme.BorderColor }
+            };
+
+            btnCancel.Paint += (s, ev) =>
+            {
+                Button btn = (Button)s;
+                GraphicsPath path = CreateRoundedRect(new Rectangle(0, 0, btn.Width, btn.Height), 8);
+                btn.Region = new Region(path);
+            };
+
+            ThemeManager.ThemeChanged += (theme) =>
+            {
+                var scheme = ThemeManager.CurrentScheme;
+                backupForm.BackColor = scheme.BackgroundPrimary;
+                buttonPanel.BackColor = scheme.BackgroundPrimary;
+                backupList.BackColor = scheme.BackgroundCard;
+                backupList.ForeColor = scheme.TextSecondary;
+                btnRestore.BackColor = scheme.PrimaryColor;
+                btnCancel.ForeColor = scheme.TextSecondary;
+                btnCancel.FlatAppearance.BorderColor = scheme.BorderColor;
+            };
+
+            btnRestore.Location = new Point((buttonPanel.Width - btnRestore.Width - btnCancel.Width - ScaleInt(20)) / 2, (buttonPanel.Height - btnRestore.Height) / 2);
+            btnCancel.Location = new Point(btnRestore.Right + ScaleInt(20), (buttonPanel.Height - btnCancel.Height) / 2);
+
+            buttonPanel.Resize += (s, ev) =>
+            {
+                btnRestore.Location = new Point((buttonPanel.Width - btnRestore.Width - btnCancel.Width - ScaleInt(20)) / 2, (buttonPanel.Height - btnRestore.Height) / 2);
+                btnCancel.Location = new Point(btnRestore.Right + ScaleInt(20), (buttonPanel.Height - btnCancel.Height) / 2);
+            };
+
+            buttonPanel.Controls.AddRange(new Control[] { btnRestore, btnCancel });
+            backupForm.Controls.Add(backupList);
+            backupForm.Controls.Add(buttonPanel);
+
+            if (backupForm.ShowDialog() == DialogResult.OK && backupList.SelectedItem != null)
+            {
+                BackupInfo selectedBackup = (BackupInfo)backupList.SelectedItem;
+
+                string siteName;
+                if (!string.IsNullOrEmpty(preselectedSite))
+                {
+                    siteName = preselectedSite;
+                }
+                else
+                {
+                    DirectoryInfo backupDir = new DirectoryInfo(selectedBackup.Path);
+                    siteName = backupDir.Parent.Name;
+                }
+
+                DialogResult confirm = MessageBox.Show(
+                    $"WARNING: Restoring will OVERWRITE current site data!\n\n" +
+                    $"Site: {siteName}\n" +
+                    $"Backup: {selectedBackup.Timestamp}\n\n" +
+                    $"This action cannot be undone.\n\n" +
+                    $"Do you want to continue?",
+                    "Confirm Restore",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (confirm == DialogResult.Yes)
+                {
+                    await RestoreFromBackup(siteName, selectedBackup);
+                }
             }
         }
 
@@ -1118,17 +1830,33 @@ cgi.fix_pathinfo=1
         {
             listSites.Items.Clear();
             if (!Directory.Exists(_wwwPath)) return;
+
             foreach (string dir in Directory.GetDirectories(_wwwPath))
             {
                 string name = Path.GetFileName(dir);
-                if (name != "default") listSites.Items.Add(name);
+                if (name != "default")
+                {
+                    // Додаємо ТІЛЬКИ чисту назву, БЕЗ іконок
+                    listSites.Items.Add(name);
+                }
             }
             if (listSites.Items.Count > 0) listSites.SelectedIndex = 0;
         }
 
         private void Log(string message)
         {
-            if (txtLog.InvokeRequired) { txtLog.Invoke(new Action(() => Log(message))); return; }
+            if (txtLog == null)
+            {
+                try { LogToFile(message); } catch { }
+                return;
+            }
+
+            if (txtLog.InvokeRequired)
+            {
+                txtLog.Invoke(new Action(() => Log(message)));
+                return;
+            }
+
             string logMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
             txtLog.AppendText(logMessage + Environment.NewLine);
             txtLog.ScrollToCaret();
@@ -1140,11 +1868,24 @@ cgi.fix_pathinfo=1
             try
             {
                 btnStart.Enabled = false;
-                BtnStop_Click(sender, e);
-                await DelayAsync(800);
-                if (!CheckRequiredFiles())
+
+                // Перевіряємо, чи сервер вже запущений
+                if (IsProcessRunning("nginx") && IsProcessRunning("php-cgi") && IsProcessRunning("mysqld"))
                 {
-                    Log("❌ Required files missing. Please check installation.");
+                    Log("Server is already running!");
+                    return;
+                }
+
+                // Зупиняємо тільки якщо щось запущено
+                if (IsProcessRunning("nginx") || IsProcessRunning("php-cgi") || IsProcessRunning("mysqld"))
+                {
+                    BtnStop_Click(sender, e);
+                    await DelayAsync(800);
+                }
+
+                if (!ValidatePreStartup())
+                {
+                    Log("Server startup validation failed!");
                     return;
                 }
 
@@ -1153,33 +1894,78 @@ cgi.fix_pathinfo=1
                 Log($"Using port: {_webPort}");
 
                 string mysqlDataUnix = _mysqlData.Replace("\\", "/");
-                if (!Directory.Exists(Path.Combine(_mysqlData, "mysql")))
+
+                // Перевіряємо, чи MySQL вже ініціалізований
+                bool mysqlNeedsInit = !Directory.Exists(Path.Combine(_mysqlData, "mysql"));
+
+                if (mysqlNeedsInit)
                 {
                     Log("Initializing MySQL...");
-                    var initProcess = Process.Start(new ProcessStartInfo { FileName = _mysqlPath, Arguments = $"--initialize-insecure --datadir=\"{mysqlDataUnix}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _mysqlWorkingDir });
-                    if (initProcess != null) initProcess.WaitForExit(10000);
-                    Log("✓ MySQL initialized");
+                    var initProcess = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = _mysqlPath,
+                        Arguments = $"--initialize-insecure --datadir=\"{mysqlDataUnix}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        WorkingDirectory = _mysqlWorkingDir
+                    });
+
+                    if (initProcess != null)
+                    {
+                        if (!initProcess.WaitForExit(30000))
+                        {
+                            Log("MySQL initialization timeout, but continuing...");
+                            try { initProcess.Kill(); } catch { }
+                        }
+                        else
+                        {
+                            Log("MySQL initialized");
+                        }
+                    }
                 }
 
-                Log("Starting MySQL...");
-                Process.Start(new ProcessStartInfo { FileName = _mysqlPath, Arguments = $"--datadir=\"{mysqlDataUnix}\" --bind-address=127.0.0.1 --port={Config.MysqlPort}", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _mysqlWorkingDir });
-                await DelayAsync(Config.ProcessStartDelay);
+                // Запускаємо MySQL тільки якщо він не запущений
+                if (!IsProcessRunning("mysqld"))
+                {
+                    Log("Starting MySQL...");
+                    if (!StartProcessSafely(_mysqlPath, $"--datadir=\"{mysqlDataUnix}\" --bind-address=127.0.0.1 --port={Config.MysqlPort}", _mysqlWorkingDir, "MySQL"))
+                    {
+                        Log("Failed to start MySQL!");
+                        return;
+                    }
+                    await DelayAsync(Config.ProcessStartDelay);
+                }
+                else
+                {
+                    Log("MySQL is already running");
+                }
 
+                // Запускаємо PHP-CGI
                 Log($"Starting PHP-CGI {_currentPhpVersion}...");
-                Process.Start(new ProcessStartInfo { FileName = _phpCgiPath, Arguments = $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _phpWorkingDir });
+                if (!StartProcessSafely(_phpCgiPath, $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"", _phpWorkingDir, "PHP-CGI"))
+                {
+                    Log("Failed to start PHP-CGI!");
+                    return;
+                }
                 await DelayAsync(Config.ProcessStartDelay);
 
+                // Запускаємо Nginx
                 Log("Starting Nginx...");
-                Process.Start(new ProcessStartInfo { FileName = _nginxPath, Arguments = $"-c \"{_nginxConf}\"", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _nginxWorkingDir });
+                if (!StartProcessSafely(_nginxPath, $"-c \"{_nginxConf}\"", _nginxWorkingDir, "Nginx"))
+                {
+                    Log("Failed to start Nginx!");
+                    return;
+                }
                 await DelayAsync(Config.NginxStartDelay);
+
                 CheckServerStatus();
 
-                Log($"✅ Server is running with PHP {_currentPhpVersion}!");
+                Log($"Server is running with PHP {_currentPhpVersion}!");
                 Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/ - WordPress");
-                Log($"   http://localhost:{(_pmaPort == 80 ? "" : _pmaPort.ToString())}/phpmyadmin - phpMyAdmin");
+                Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/phpmyadmin - phpMyAdmin");
                 Log($"   Max upload size: {Config.UploadMaxSize}MB");
             }
-            catch (Exception ex) { Log($"❌ Start error: {ex.Message}"); }
+            catch (Exception ex) { Log($"Start error: {ex.Message}"); }
             finally { btnStart.Enabled = true; }
         }
 
@@ -1188,93 +1974,261 @@ cgi.fix_pathinfo=1
             Log("Stopping services...");
             foreach (var name in new[] { "nginx", "php-cgi", "mysqld" })
                 foreach (var p in Process.GetProcessesByName(name))
-                    try { p.Kill(); p.WaitForExit(2000); Log($"✓ Stopped {name}"); } catch { }
-            Log("⏹️ All services stopped");
+                    try { p.Kill(); p.WaitForExit(2000); Log($"Stopped {name}"); } catch { }
+            Log("All services stopped");
             CheckServerStatus();
         }
 
         private void BtnOpenAdmin_Click(object sender, EventArgs e)
         {
-            if (listSites.SelectedItem == null) { MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (listSites.SelectedItem == null)
+            {
+                MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             string siteName = listSites.SelectedItem.ToString() ?? "";
-            string port = _webPort == 80 ? "" : $":{_webPort}";
-            string url = $"http://{siteName}.wp{port}/wp-admin";
-            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            Log($"Opened admin: {url}");
+            bool isPhpOnly = IsPhpOnlySite(siteName);
+
+            string url = isPhpOnly
+                ? $"http://{siteName}.wp:{_webPort}/"
+                : $"http://{siteName}.wp:{_webPort}/wp-admin";
+
+            Log($"Opened: {url}");
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to open browser: {ex.Message}");
+                MessageBox.Show($"Failed to open browser: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void BtnPhpMyAdmin_Click(object sender, EventArgs e)
         {
-            string port = _pmaPort == 80 ? "" : $":{_pmaPort}";
-            string url = $"http://localhost{port}/phpmyadmin";
-            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            Log($"Opening phpMyAdmin: {url}");
+            // phpMyAdmin завжди на тому ж порту, що й nginx
+            string url = $"http://localhost:{_webPort}/phpmyadmin";
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+                Log($"Opening phpMyAdmin: {url}");
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to open phpMyAdmin: {ex.Message}");
+                MessageBox.Show($"Failed to open browser: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
-        private void BtnCreateSite_Click(object sender, EventArgs e)
+        private async void BtnCreateSite_Click(object sender, EventArgs e)
         {
             string siteName = Microsoft.VisualBasic.Interaction.InputBox("Enter site name (letters, numbers, hyphens):", "Create New Site", "mynewsite");
             if (string.IsNullOrWhiteSpace(siteName)) return;
             siteName = Regex.Replace(siteName, @"[^a-zA-Z0-9\-]", "").ToLower();
+
+            bool isPhpOnlyMode = (siteName == "php");
+
+            if (isPhpOnlyMode)
+            {
+                DialogResult result = MessageBox.Show(
+                    "PHP Learning Mode\n\n" +
+                    "You are about to create a site with the name 'php'.\n\n" +
+                    "This is a SPECIAL mode:\n" +
+                    "• No WordPress will be installed\n" +
+                    "• No database will be created\n" +
+                    "• Only pure PHP for learning and testing\n\n" +
+                    "Files will be located in: WPronto/www/php/\n\n" +
+                    "Do you want to continue?",
+                    "WPronto - PHP Mode",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes) return;
+            }
+
             string sitePath = Path.Combine(_wwwPath, siteName);
-            if (Directory.Exists(sitePath)) { MessageBox.Show("Site already exists!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            if (!Directory.Exists(_templatePath)) { MessageBox.Show("WordPress template not found.\n\nPlease add WordPress files to the 'template' folder.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (Directory.Exists(sitePath))
+            {
+                MessageBox.Show("Site already exists!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!isPhpOnlyMode && !Directory.Exists(_templatePath))
+            {
+                MessageBox.Show("WordPress template not found.\n\nPlease add WordPress files to the 'template' folder.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             try
             {
-                Log($"Creating site: {siteName}");
+                Log($"Creating site: {siteName} (Mode: {(isPhpOnlyMode ? "PHP Server" : "WordPress")})");
                 Directory.CreateDirectory(sitePath);
-                CopyDirectory(_templatePath, sitePath);
-                string userIniPath = Path.Combine(sitePath, ".user.ini");
-                string userIniContent = $"upload_max_filesize = {Config.UploadMaxSize}M\npost_max_size = {Config.UploadMaxSize}M\nmemory_limit = {Config.MemoryLimit}M\nmax_execution_time = 300\nmax_input_time = 300";
-                File.WriteAllText(userIniPath, userIniContent, Encoding.ASCII);
-                Log($"   ✓ Created .user.ini ({Config.UploadMaxSize}MB limit)");
 
-                string dbName = $"{siteName}_db";
-                string rootUnix = sitePath.Replace("\\", "/");
-                string nginxConfig = "server {\n" + $"    listen {_webPort};\n" + $"    server_name {siteName}.wp;\n" + $"    root \"{rootUnix}\";\n    index index.php;\n\n" + $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" + "    location / { try_files $uri $uri/ /index.php?$args; }\n\n" + "    location ~ /\\. { deny all; }\n\n" + "    location ~ \\.php$ {\n        try_files     $uri =404;\n" + "        fastcgi_pass  127.0.0.1:9000;\n" + "        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" + "        include       fastcgi_params;\n    }\n}\n";
-                File.WriteAllText(Path.Combine(_sitesPath, $"{siteName}.conf"), nginxConfig, Utf8NoBom);
-                AddHostEntry($"{siteName}.wp");
-                CreateDatabase(dbName);
-                CreateWpConfig(sitePath, dbName, siteName);
-                ReloadNginx();
-                LoadSites();
+                if (isPhpOnlyMode)
+                {
+                    await CreatePhpOnlySiteAsync(sitePath, siteName);
+                }
+                else
+                {
+                    CopyDirectory(_templatePath, sitePath);
 
-                string port = _webPort == 80 ? "" : $":{_webPort}";
-                string siteUrl = $"http://{siteName}.wp{port}";
-                Log($"✅ Site created successfully!");
-                Log($"   URL: {siteUrl}");
-                Log($"   Admin: {siteUrl}/wp-admin");
-                Log($"   Database: {dbName} (user: root, no password)");
-                if (MessageBox.Show($"Site '{siteName}' created!\n\nOpen WordPress install page?", "WPronto", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                    Process.Start(new ProcessStartInfo { FileName = $"{siteUrl}/wp-admin/install.php", UseShellExecute = true });
+                    string userIniPath = Path.Combine(sitePath, ".user.ini");
+                    string userIniContent = $"upload_max_filesize = {Config.UploadMaxSize}M\npost_max_size = {Config.UploadMaxSize}M\nmemory_limit = {Config.MemoryLimit}M\nmax_execution_time = 300\nmax_input_time = 300";
+                    File.WriteAllText(userIniPath, userIniContent, Encoding.ASCII);
+                    Log($"   Created .user.ini ({Config.UploadMaxSize}MB limit)");
+
+                    string dbName = $"{siteName}_db";
+                    string rootUnix = sitePath.Replace("\\", "/");
+                    string nginxConfig = "server {\n" + $"    listen {_webPort};\n" + $"    server_name {siteName}.wp;\n" + $"    root \"{rootUnix}\";\n    index index.php;\n\n" + $"    client_max_body_size {Config.UploadMaxSize}M;\n\n" + "    location / { try_files $uri $uri/ /index.php?$args; }\n\n" + "    location ~ /\\. { deny all; }\n\n" + "    location ~ \\.php$ {\n        try_files     $uri =404;\n" + "        fastcgi_pass  127.0.0.1:9000;\n" + "        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" + "        include       fastcgi_params;\n    }\n}\n";
+                    File.WriteAllText(Path.Combine(_sitesPath, $"{siteName}.conf"), nginxConfig, Utf8NoBom);
+                    AddHostEntry($"{siteName}.wp");
+                    CreateDatabase(dbName);
+                    CreateWpConfig(sitePath, dbName, siteName);
+                    ReloadNginx();
+                    LoadSites();
+
+                    string port = _webPort == 80 ? "" : $":{_webPort}";
+                    string siteUrl = $"http://{siteName}.wp{port}";
+                    Log($"Site created successfully!");
+                    Log($"   URL: {siteUrl}");
+                    Log($"   Admin: {siteUrl}/wp-admin");
+                    Log($"   Database: {dbName} (user: root, no password)");
+                    if (MessageBox.Show($"Site '{siteName}' created!\n\nOpen WordPress install page?", "WPronto", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        Process.Start(new ProcessStartInfo { FileName = $"{siteUrl}/wp-admin/install.php", UseShellExecute = true });
+                }
             }
-            catch (Exception ex) { Log($"❌ Error: {ex.Message}"); }
+            catch (Exception ex) { Log($"Error: {ex.Message}"); }
+        }
+
+        private async Task CreatePhpOnlySiteAsync(string sitePath, string siteName)
+        {
+            Log($"   Creating PHP-only development environment...");
+
+            string indexContent = @"<?php
+// Enable error reporting for easy debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Your code starts here
+echo 'Hello, World!';
+";
+
+            await File.WriteAllTextAsync(Path.Combine(sitePath, "index.php"), indexContent, Encoding.UTF8);
+
+            string userIniContent = @"; WPronto PHP Server Settings
+upload_max_filesize = 256M
+post_max_size = 256M
+memory_limit = 512M
+max_execution_time = 300
+max_input_time = 300
+display_errors = On
+display_startup_errors = On
+error_reporting = E_ALL";
+
+            await File.WriteAllTextAsync(Path.Combine(sitePath, ".user.ini"), userIniContent, Encoding.ASCII);
+
+            int port = _webPort;
+            string rootUnix = sitePath.Replace("\\", "/");
+
+            string nginxConfig = $@"server {{
+    listen {port};
+    server_name {siteName}.wp;
+    root ""{rootUnix}"";
+    index index.php index.html;
+    
+    client_max_body_size 256M;
+    
+    location / {{
+        try_files $uri $uri/ =404;
+    }}
+    
+    location ~ \.php$ {{
+        try_files $uri =404;
+        fastcgi_pass 127.0.0.1:{Config.PhpPort};
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }}
+}}";
+
+            await File.WriteAllTextAsync(Path.Combine(_sitesPath, $"{siteName}.conf"), nginxConfig, Utf8NoBom);
+
+            AddHostEntry($"{siteName}.wp");
+
+            ReloadNginx();
+            LoadSites();
+
+            string portStr = _webPort == 80 ? "" : $":{_webPort}";
+            string siteUrl = $"http://{siteName}.wp{portStr}";
+
+            Log($"   PHP server created successfully!");
+            Log($"   Files: index.php, .user.ini");
+            Log($"   Error reporting enabled (display_errors = On)");
+            Log($"   No database created");
+            Log($"Site created successfully!");
+            Log($"   URL: {siteUrl}");
+            Log($"   Mode: PHP Server (no WordPress, no database)");
+
+            if (MessageBox.Show($"PHP Server '{siteName}' created!\n\nOpen site?", "WPronto",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo { FileName = siteUrl, UseShellExecute = true });
+            }
         }
 
         private void BtnBackupSite_Click(object sender, EventArgs e)
         {
-            if (listSites.SelectedItem == null) { MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            string siteName = listSites.SelectedItem.ToString();
-            if (MessageBox.Show($"Create a backup of site '{siteName}'?\n\nThis will create a copy of:\n✓ Website files\n✓ Database\n\nThe site will remain active.", "Confirm Backup", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (listSites.SelectedItem == null)
+            {
+                MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string siteName = listSites.SelectedItem.ToString() ?? "";
+            bool isPhpOnly = IsPhpOnlySite(siteName);
+
+            if (isPhpOnly)
+            {
+                MessageBox.Show("PHP Mode sites don't have databases to backup.\n\nYou can manually copy the files from the 'www/php' folder.",
+                    "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (MessageBox.Show($"Create a backup of site '{siteName}'?\n\nThis will create a copy of:\nWebsite files\nDatabase\n\nThe site will remain active.", "Confirm Backup", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 CreateFullBackup(siteName);
         }
 
         private void BtnDeleteSite_Click(object sender, EventArgs e)
         {
-            if (listSites.SelectedItem == null) { MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            string siteName = listSites.SelectedItem.ToString();
-            if (MessageBox.Show($"Are you sure you want to delete site '{siteName}'?\n\nThis will permanently delete:\n✓ Website files\n✓ Database\n✓ Nginx configuration\n✓ Hosts entry\n\nThis action cannot be undone!", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+            if (listSites.SelectedItem == null)
+            {
+                MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string siteName = listSites.SelectedItem.ToString() ?? "";
+            bool isPhpOnly = IsPhpOnlySite(siteName);
+
+            if (MessageBox.Show($"Are you sure you want to delete site '{siteName}'?\n\nThis will permanently delete:\nWebsite files\nDatabase (if exists)\nNginx configuration\nHosts entry\n\nThis action cannot be undone!", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
 
             try
             {
                 Log($"Deleting site: {siteName}");
                 string sitePath = Path.Combine(_wwwPath, siteName);
-                if (Directory.Exists(sitePath)) { Directory.Delete(sitePath, true); Log($"✓ Deleted folder: {sitePath}"); }
+                if (Directory.Exists(sitePath)) { Directory.Delete(sitePath, true); Log($"Deleted folder: {sitePath}"); }
                 string confPath = Path.Combine(_sitesPath, $"{siteName}.conf");
-                if (File.Exists(confPath)) { File.Delete(confPath); Log($"✓ Deleted config: {siteName}.conf"); }
-                string dbName = $"{siteName}_db";
-                try { Process.Start(new ProcessStartInfo { FileName = _mysqlClientPath, Arguments = $"-u root -e \"DROP DATABASE IF EXISTS {dbName}\"", UseShellExecute = false, CreateNoWindow = true })?.WaitForExit(5000); Log($"✓ Deleted database: {dbName}"); } catch (Exception ex) { Log($"⚠ Could not delete database: {ex.Message}"); }
+                if (File.Exists(confPath)) { File.Delete(confPath); Log($"Deleted config: {siteName}.conf"); }
+
+                if (!isPhpOnly && siteName != "php")
+                {
+                    string dbName = $"{siteName}_db";
+                    try { Process.Start(new ProcessStartInfo { FileName = _mysqlClientPath, Arguments = $"-u root -e \"DROP DATABASE IF EXISTS {dbName}\"", UseShellExecute = false, CreateNoWindow = true })?.WaitForExit(5000); Log($"Deleted database: {dbName}"); }
+                    catch (Exception ex) { Log($"Could not delete database: {ex.Message}"); }
+                }
+
                 try
                 {
                     string hostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "drivers", "etc", "hosts");
@@ -1283,16 +2237,17 @@ cgi.fix_pathinfo=1
                     {
                         var lines = File.ReadAllLines(hostsPath).Where(line => !line.Contains(domain)).ToArray();
                         File.WriteAllLines(hostsPath, lines);
-                        Log($"✓ Removed hosts entry: {domain}");
+                        Log($"Removed hosts entry: {domain}");
                     }
                 }
-                catch { Log("⚠ Could not remove hosts entry (run as admin)"); }
+                catch { Log("Could not remove hosts entry (run as admin)"); }
+
                 ReloadNginx();
                 LoadSites();
-                Log($"✅ Site '{siteName}' deleted successfully!");
+                Log($"Site '{siteName}' deleted successfully!");
                 MessageBox.Show($"Site '{siteName}' has been deleted.", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex) { Log($"❌ Error deleting site: {ex.Message}"); MessageBox.Show($"Error deleting site: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { Log($"Error deleting site: {ex.Message}"); MessageBox.Show($"Error deleting site: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
         private void CreateDatabase(string dbName)
@@ -1301,9 +2256,9 @@ cgi.fix_pathinfo=1
             {
                 Log($"Creating database: {dbName}");
                 Process.Start(new ProcessStartInfo { FileName = _mysqlClientPath, Arguments = $"-u root -e \"CREATE DATABASE IF NOT EXISTS {dbName};\"", UseShellExecute = false, CreateNoWindow = true })?.WaitForExit(5000);
-                Log($"✓ Created database: {dbName}");
+                Log($"Created database: {dbName}");
             }
-            catch (Exception ex) { Log($"⚠ Database error: {ex.Message}"); }
+            catch (Exception ex) { Log($"Database error: {ex.Message}"); }
         }
 
         private void CreateWpConfig(string sitePath, string dbName, string siteName)
@@ -1337,7 +2292,7 @@ cgi.fix_pathinfo=1
                 "if ( ! defined( 'ABSPATH' ) ) define( 'ABSPATH', __DIR__ . '/' );\n" +
                 "require_once ABSPATH . 'wp-settings.php';";
             File.WriteAllText(Path.Combine(sitePath, "wp-config.php"), content, new UTF8Encoding(false));
-            Log($"✓ Created wp-config.php for {siteName}");
+            Log($"Created wp-config.php for {siteName}");
         }
 
         private string GenerateRandomKey(int length)
@@ -1352,9 +2307,9 @@ cgi.fix_pathinfo=1
             try
             {
                 Process.Start(new ProcessStartInfo { FileName = _nginxPath, Arguments = "-s reload", UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = _nginxWorkingDir });
-                Log("✓ Nginx reloaded");
+                Log("Nginx reloaded");
             }
-            catch (Exception ex) { Log($"⚠ Reload error: {ex.Message}"); }
+            catch (Exception ex) { Log($"Reload error: {ex.Message}"); }
         }
 
         private void AddHostEntry(string domain)
@@ -1366,10 +2321,10 @@ cgi.fix_pathinfo=1
                 if (!File.ReadAllText(hostsPath).Contains(entry))
                 {
                     File.AppendAllText(hostsPath, Environment.NewLine + entry);
-                    Log($"✓ Hosts updated: {domain}");
+                    Log($"Hosts updated: {domain}");
                 }
             }
-            catch { Log("⚠ Run as Admin for hosts file access!"); }
+            catch { Log("Run as Admin for hosts file access!"); }
         }
 
         private void CopyDirectory(string source, string dest)
@@ -1381,8 +2336,7 @@ cgi.fix_pathinfo=1
                 CopyDirectory(d, Path.Combine(dest, Path.GetFileName(d)));
         }
 
-        private void BtnLicense_Click(object sender, EventArgs e) => ShowTextFile("license.txt", "WPronto License (MIT)");
-        private void BtnAbout_Click(object sender, EventArgs e) => ShowTextFile("about.txt", "About WPronto");
+        private void BtnHelp_Click(object sender, EventArgs e) => ShowTextFile("help.txt", "WPronto Help");
 
         private void ShowTextFile(string filename, string title)
         {
@@ -1415,4 +2369,3 @@ cgi.fix_pathinfo=1
         }
     }
 }
-

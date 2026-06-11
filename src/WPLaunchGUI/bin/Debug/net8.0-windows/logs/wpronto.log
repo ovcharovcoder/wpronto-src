@@ -1,0 +1,68 @@
+2026-06-08 08:39:30 - ✅ Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-08 08:39:30 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-08 08:39:30 - ✅ nginx.conf created with ABSOLUTE dynamic paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-08 08:39:30 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-08 08:39:32 - Stopping services...
+2026-06-08 08:39:32 - ⏹️ All services stopped
+2026-06-08 08:39:33 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-08 08:39:33 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-08 08:39:33 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-08 08:39:33 - ❌ Required files missing. Please check installation.
+2026-06-08 08:39:43 - Stopping services...
+2026-06-08 08:39:43 - ⏹️ All services stopped
+2026-06-08 08:39:44 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-08 08:39:44 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-08 08:39:44 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-08 08:39:44 - ❌ Required files missing. Please check installation.
+2026-06-08 08:39:45 - Stopping services...
+2026-06-08 08:39:45 - ⏹️ All services stopped
+2026-06-08 08:39:46 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-08 08:39:46 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-08 08:39:46 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-08 08:39:46 - ❌ Required files missing. Please check installation.
+2026-06-08 08:39:47 - Stopping services...
+2026-06-08 08:39:47 - ⏹️ All services stopped
+2026-06-08 08:39:48 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-08 08:39:48 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-08 08:39:48 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-08 08:39:48 - ❌ Required files missing. Please check installation.
+2026-06-08 08:59:05 - ✅ Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-08 08:59:06 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-08 08:59:07 - ✅ nginx.conf created with ABSOLUTE dynamic paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-08 08:59:07 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-08 08:59:07 - ⚠️ NOT RUNNING AS ADMINISTRATOR!
+2026-06-08 08:59:07 - ⚠️ Hosts file modification will not work!
+2026-06-08 08:59:07 - ⚠️ Virtual domains like site.wp will not resolve!
+2026-06-08 08:59:07 - ℹ️ Please restart the program as Administrator for full functionality
+2026-06-08 08:59:13 - Stopping services...
+2026-06-08 08:59:13 - ⏹️ All services stopped
+2026-06-08 08:59:14 - 🔍 Running pre-startup checks...
+2026-06-08 08:59:16 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-08 08:59:16 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-08 08:59:16 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-08 08:59:16 - ❌ Required files are missing!
+2026-06-08 08:59:16 - ❌ Server startup validation failed!
+2026-06-08 11:29:06 - ✅ Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-08 11:29:07 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-08 11:29:07 - ✅ nginx.conf created with ABSOLUTE dynamic paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-08 11:29:07 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-08 11:29:08 - ⚠️ NOT RUNNING AS ADMINISTRATOR!
+2026-06-08 11:29:08 - ⚠️ Hosts file modification will not work!
+2026-06-08 11:29:08 - ⚠️ Virtual domains like site.wp will not resolve!
+2026-06-08 11:29:08 - ℹ️ Please restart the program as Administrator for full functionality
+2026-06-08 11:38:41 - Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-08 11:38:42 - Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-08 11:38:42 - nginx.conf created at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-08 11:38:43 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-08 11:38:43 - NOT RUNNING AS ADMINISTRATOR!
+2026-06-08 11:38:43 - Hosts file modification will not work!
+2026-06-08 11:38:43 - Virtual domains like site.wp will not resolve!
+2026-06-08 11:38:43 - Please restart the program as Administrator for full functionality
+2026-06-08 13:02:08 - Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-08 13:02:09 - Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-08 13:02:09 - nginx.conf created at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-08 13:02:09 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-08 13:02:10 - NOT RUNNING AS ADMINISTRATOR!
+2026-06-08 13:02:10 - Hosts file modification will not work!
+2026-06-08 13:02:10 - Virtual domains like site.wp will not resolve!
+2026-06-08 13:02:10 - Please restart the program as Administrator for full functionality
