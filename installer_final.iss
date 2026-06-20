@@ -1,9 +1,9 @@
-﻿; Inno Setup Script for WPronto - v2.0
+﻿; Inno Setup Script for WPronto - v3.0
 
 [Setup]
 AppId=WPronto
 AppName=WPronto — Local WP Environment
-AppVersion=2.0
+AppVersion=3.0
 AppPublisher=Andrii Ovcharov
 AppPublisherURL=https://github.com/ovcharovcoder/wpronto
 AppSupportURL=https://github.com/ovcharovcoder/wpronto
@@ -22,7 +22,7 @@ LicenseFile=C:\WPronto\license.txt
 DisableWelcomePage=yes
 
 OutputDir=C:\WPronto\Installer
-OutputBaseFilename=WPronto_v2.0
+OutputBaseFilename=WPronto_v3.0
 SetupIconFile=C:\WPronto\src\WPLaunchGUI\app.ico
 Compression=lzma
 SolidCompression=yes
@@ -48,7 +48,8 @@ Source: "C:\WPronto\config\*"; DestDir: "{app}\config"; Flags: ignoreversion rec
 Source: "C:\WPronto\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\WPronto\template\*"; DestDir: "{app}\template"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\WPronto\www\*"; DestDir: "{app}\www"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\WPronto\about.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\WPronto\help.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\WPronto\shortcut.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\WPronto\license.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]

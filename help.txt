@@ -1,0 +1,477 @@
+═══════════════════════════════════════════════════════════════
+                               WPronto
+        Fast, Simple & Powerful Local WordPress Environment
+═══════════════════════════════════════════════════════════════
+
+Version: 3.0
+Release  Date: June 20, 2026
+Website: https://ovcharovcoder.github.io/wpronto
+Author:  Andrii Ovcharov
+
+
+═══════════════════════════════════════════════════════════════
+                            DESCRIPTION
+═══════════════════════════════════════════════════════════════
+
+WPronto is a local WordPress development environment for Windows.
+It provides a complete local development stack including Nginx, PHP, and MySQL,
+allowing you to create and manage multiple WordPress sites with one click -
+no manual configuration, no hosting required.
+
+Additionally, WPronto features a special PHP Learning Mode for developers
+who want to learn PHP or build pure PHP applications without WordPress.
+
+
+═══════════════════════════════════════════════════════════════
+                         INSTALLED COMPONENTS
+═══════════════════════════════════════════════════════════════
+
+• WordPress         : 7.0
+• PHP               : 8.3 and 8.5
+• Nginx             : 1.30.2
+• phpMyAdmin        : 5.2.3
+• MySQL (MariaDB)   : 11.4.2
+
+
+═══════════════════════════════════════════════════════════════
+                         KEY FEATURES
+═══════════════════════════════════════════════════════════════
+
+✅ One-click start/stop of full server stack (Nginx + PHP + MySQL)
+✅ Full keyboard support with hotkeys for all major actions
+✅ Multiple WordPress sites management on custom domains (*.wp)
+✅ Built-in phpMyAdmin for easy database management
+✅ Automatic database creation when creating sites
+✅ Automatic wp-config.php generation with security keys
+✅ One-click site deletion (files + database + config + hosts entry)
+✅ Large file upload support (up to 256MB) for plugins & themes
+✅ Full site backup (files + database) with one click
+✅ One-click restore from any backup with automatic site recreation
+✅ Multiple backup versions support (keep history of all backups)
+✅ Restore deleted sites directly from backup (no need to recreate)
+✅ PHP Learning Mode – pure PHP without WordPress
+✅ Development mode with error reporting enabled
+✅ Detailed status bar with real-time server information
+✅ Enhanced logging with file output for debugging
+
+
+═══════════════════════════════════════════════════════════════
+                      HOTKEYS (KEYBOARD SHORTCUTS)
+═══════════════════════════════════════════════════════════════
+
+Control WPronto entirely from your keyboard! All hotkeys use 
+Ctrl+Shift+[Key] to avoid conflicts with system shortcuts.
+
+┌─────────────────────────────────────────────────────────────────
+│ HOTKEY              │ ACTION                                
+├─────────────────────────────────────────────────────────────────
+│ Ctrl + Shift + S    │ Start Server                              
+│ Ctrl + Shift + X    │ Stop Server                             
+│ Ctrl + Shift + A    │ Open Admin (WordPress dashboard)       
+│ Ctrl + Shift + P    │ Open phpMyAdmin                          
+│ Ctrl + Shift + C    │ Create New Site                         
+│ Ctrl + Shift + B    │ Backup Selected Site                      
+│ Ctrl + Shift + R    │ Restore from Backup                      
+│ Ctrl + Shift + D    │ Delete Selected Site                      
+└─────────────────────────────────────────────────────────────────
+
+💡 TIP: You don't need to remember all hotkeys - the buttons will
+   still work with mouse clicks, and the shortcuts are just for
+   power users who prefer keyboard navigation!
+
+
+═══════════════════════════════════════════════════════════════
+                    PHP LEARNING MODE – SPECIAL FEATURE
+═══════════════════════════════════════════════════════════════
+
+WHAT IS PHP LEARNING MODE?
+
+   PHP Learning Mode is a special site type in WPronto that creates
+   a pure PHP environment WITHOUT WordPress. Perfect for:
+   • Learning PHP from scratch
+   • Building custom PHP applications
+   • Testing PHP scripts and functions
+   • Developing APIs without WordPress overhead
+   • Teaching PHP programming
+
+HOW TO CREATE A PHP LEARNING MODE SITE
+
+   ┌─────────────────────────────────────────────────────────────
+   │ 1. Click "Create Site" button (or press Ctrl+Shift+C)     
+   │ 2. Enter "php" as the site name (exactly)                 
+   │ 3. Confirm the warning dialog                             
+   │ 4. A pure PHP site is created at: http://php.wp           
+   └─────────────────────────────────────────────────────────────
+
+WHAT YOU GET IN PHP LEARNING MODE
+
+   ✓ NO WordPress installation – just pure PHP!
+   ✓ NO database created – you control if you need one
+   ✓ Pre-configured .user.ini with development settings:
+     • display_errors = On (see errors immediately)
+     • display_startup_errors = On
+     • error_reporting = E_ALL (all errors shown)
+     • upload_max_filesize = 256MB
+     • memory_limit = 512MB
+   ✓ Sample index.php with error reporting enabled
+   ✓ Full control over your code
+
+FILE LOCATION
+
+   Your PHP Learning Mode site files are stored in:
+   ┌─────────────────────────────────────────────────────────────
+   │ WPronto\www\php\                                          
+   │ ├── index.php    (starter template with error reporting)   
+   │ └── .user.ini    (PHP configuration for development)     
+   └─────────────────────────────────────────────────────────────
+
+
+═══════════════════════════════════════════════════════════════
+                    DEVELOPMENT MODE FEATURES
+═══════════════════════════════════════════════════════════════
+
+ERROR REPORTING
+
+   WPronto automatically enables full error reporting for development:
+   • display_errors = On (errors shown in browser)
+   • display_startup_errors = On
+   • error_reporting = E_ALL (all errors: notices, warnings, fatal)
+   • log_errors = On (errors saved to logs/php_error.log)
+
+PHP CONFIGURATION FOR DEVELOPMENT
+
+   File: config/php/php_8.3.ini (and php_8.5.ini)
+   
+   Development-friendly settings:
+   • upload_max_filesize = 256MB (no more "file too large" errors)
+   • post_max_size = 256MB
+   • memory_limit = 512MB (enough for most applications)
+   • max_execution_time = 300 (5 minutes for long scripts)
+   • max_input_time = 300
+
+SWITCHING PHP VERSIONS
+
+   Test your code with different PHP versions:
+   • Select PHP 8.3 (stable, recommended)
+   • Select PHP 8.5 (newest features)
+   • Server automatically restarts with selected version
+
+DATABASE MANAGEMENT
+
+   For WordPress sites: Database is created automatically
+   For PHP Learning Mode: Create databases manually via phpMyAdmin
+   • Open phpMyAdmin: http://localhost/phpmyadmin (or press Ctrl+Shift+P)
+   • Create any database you need
+   • User: root, no password
+
+
+═══════════════════════════════════════════════════════════════
+                         WHAT'S NEW IN v3.0
+═══════════════════════════════════════════════════════════════
+
+⌨️ EXPANDED HOTKEYS
+   
+💾 BACKUP & RESTORE (FULLY AUTOMATIC!)
+   Never lose your work again:
+   • One-click full backup (site files + database)
+   • One-click restore – select any backup and click Restore
+   • Automatic site recreation – even if the site was deleted!
+   • Backups stored in organized folders by site and date
+   • Keep multiple backup versions (daily backups recommended)
+   • Perfect for testing risky updates or plugins
+   • Restore from ANY backup version with visual selection
+
+📚 PHP LEARNING MODE
+   Learn PHP without WordPress complexity:
+   • Create pure PHP sites by entering "php" as site name
+   • No database required – start coding immediately
+   • Error reporting enabled by default
+   • Perfect for beginners and API development
+
+⚡ DEVELOPMENT OPTIMIZATIONS
+   Designed for efficient development:
+   • Error reporting turned ON (see issues immediately)
+   • Large file upload support (256MB)
+   • Switch PHP versions (8.3 / 8.5) without reinstalling
+   • Extended execution time for long scripts
+
+📊 ENHANCED MONITORING
+   Always know what's happening:
+   • Status bar shows current server state
+   • Detailed operation logs in real-time
+   • All logs saved to file for debugging
+   • Clear error messages when something goes wrong
+
+⚡ IMPROVED STABILITY
+   More reliable than ever:
+   • Automatic port detection (switches to 8080 if 80 is busy)
+   • File validation before starting services
+   • Better error handling and recovery
+   • MySQL stays running during restore for data integrity
+
+
+═══════════════════════════════════════════════════════════════
+                    BACKUP SYSTEM – COMPLETE GUIDE
+═══════════════════════════════════════════════════════════════
+
+📦 HOW BACKUP WORKS
+
+   When you click "Backup" button (or press Ctrl+Shift+B), WPronto automatically:
+   1. Copies ALL site files from www/your-site/
+   2. Exports FULL database (all tables, data, structure)
+   3. Saves everything to: backups/your-site/YYYY-MM-DD_HH-MM-SS/
+   4. Shows the backup location in the log
+
+   Structure of each backup:
+   ┌─────────────────────────────────────────────────────────────
+   │ backups/                                                    
+   │ └── your-site-name/                                       
+   │     └── 2026-06-03_14-30-45/  ← Timestamped backup         
+   │         ├── files/                ← Complete site files     
+   │         └── your-site-name_db.sql ← Database dump           
+   └─────────────────────────────────────────────────────────────
+
+   NOTE: PHP Learning Mode sites also support backup/restore,
+   but without database (since they don't have one by default).
+
+
+🔄 HOW TO RESTORE A BACKUP (AUTOMATIC METHOD)
+
+   WPronto v3.0 features FULLY AUTOMATIC one-click restore!
+
+   METHOD 1: Site exists in the list
+   ┌─────────────────────────────────────────────────────────────
+   │ 1. Select the site from the left panel                    
+   │ 2. Click the orange "Restore" button (or Ctrl+Shift+R)     
+   │ 3. Choose which backup version to restore                  
+   │ 4. Confirm the operation                                  
+   │ 5. Done! Files and database are restored automatically     
+   └─────────────────────────────────────────────────────────────
+
+   METHOD 2: Site was deleted (not in list)
+   ┌─────────────────────────────────────────────────────────────
+   │ 1. Click "Restore" button WITHOUT selecting any site       
+   │ 2. Browse ALL backups from ALL sites                      
+   │ 3. Select the backup you want to restore                   
+   │ 4. Confirm – site will be recreated automatically!        
+   │ 5. Site appears back in list with all data restored       
+   └─────────────────────────────────────────────────────────────
+
+   The restore process automatically:
+   ✓ Stops web server (Nginx + PHP) but keeps MySQL running
+   ✓ Restores all site files from backup
+   ✓ Drops existing database and creates fresh one (for WP sites)
+   ✓ Imports the backup database
+   ✓ Recreates Nginx configuration if missing
+   ✓ Adds hosts entry if missing
+   ✓ Restarts web server
+   ✓ Updates the sites list
+
+
+💡 BACKUP BEST PRACTICES
+
+   • Create backups BEFORE installing new plugins or themes
+   • Backup BEFORE making major configuration changes
+   • Keep at least 3 recent backups (delete old ones manually)
+   • Test your backups by restoring to a test site
+   • Regular backups = peace of mind!
+   • For PHP Learning Mode, backup is optional (just the files)
+
+
+═══════════════════════════════════════════════════════════════
+                        SYSTEM REQUIREMENTS
+═══════════════════════════════════════════════════════════════
+
+Minimum:
+• OS               : Windows 10 / 11 (64-bit)
+• .NET Runtime     : .NET 8.0 Desktop Runtime
+• Disk Space       : 2GB free space (700MB core + space for sites)
+• RAM              : 8GB
+
+Recommended:
+• RAM              : 16GB (for multiple sites)
+• CPU              : 4+ cores
+• Display          : 1920x1080 or higher (for best DPI experience)
+• Disk Space       : 10GB+ for multiple sites and backups
+
+
+═══════════════════════════════════════════════════════════════
+                         QUICK START GUIDE
+═══════════════════════════════════════════════════════════════
+
+1. START THE SERVER
+   Click the "Start" button OR press Ctrl+Shift+S on your keyboard.
+   Wait for the status to change to "● SERVER RUNNING" (green).
+
+2. CREATE A NEW SITE
+   Click "Create Site" button (or press Ctrl+Shift+C).
+   Enter a site name (letters, numbers, and hyphens only).
+   
+   FOR WORDPRESS SITE:
+      • Any name EXCEPT "php"
+      • Example: "mynewsite" → http://mynewsite.wp
+      • Complete WordPress installation via wp-admin/install.php
+   
+   FOR PHP LEARNING MODE (PURE PHP):
+      • Enter "php" as the site name (exactly)
+      • Confirm the special mode dialog
+      • Site accessible at: http://php.wp
+      • Start coding in WPronto\www\php\index.php
+
+3. INSTALL WORDPRESS (for WordPress sites only)
+   After creation, click "Open Admin" button (or press Ctrl+Shift+A) or open:
+   http://your-site.wp/wp-admin/install.php
+   Fill in your site details and complete the installation.
+
+4. BACKUP YOUR SITE
+   Select a site from the list → Click "Backup" button (or press Ctrl+Shift+B)
+   A full copy of files and database will be saved to:
+   WPronto\backups\your-site-name\YYYY-MM-DD_HH-MM-SS\
+
+5. RESTORE YOUR SITE
+   Select a site (or click Restore without selection)
+   Click "Restore" button (or press Ctrl+Shift+R)
+   Choose which backup version to restore
+   Click "Restore" and confirm – done!
+
+6. DEVELOP YOUR CODE
+   
+   FOR WORDPRESS:
+      • Access admin: http://your-site.wp/wp-admin (or Ctrl+Shift+A)
+      • Upload plugins & themes up to 256MB
+      • See errors immediately (development mode)
+      • Manage DB via phpMyAdmin: http://localhost/phpmyadmin (or Ctrl+Shift+P)
+   
+   FOR PHP LEARNING MODE:
+      • Edit files in: WPronto\www\php\
+      • Open browser: http://php.wp
+      • See all PHP errors in browser
+      • No WordPress overhead – just pure PHP!
+
+7. MANAGE SITES (Mouse or Keyboard).
+
+
+═══════════════════════════════════════════════════════════════
+                    QUICK COMPARISON: WORDPRESS vs PHP MODE
+═══════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────
+│     FEATURE        │   WORDPRESS MODE    │   PHP LEARNING MODE 
+├─────────────────────────────────────────────────────────────
+│ Site name          │ Any except "php"    │ Must be "php"        
+│ WordPress          │ ✓ Installed         │ ✗ Not installed      
+│ Database           │ ✓ Auto-created      │ ✗ Manual (optional)  
+│ Error reporting    │ ✓ Enabled           │ ✓ Enabled            
+│ Best for           │ WordPress dev       │ Learning PHP / APIs  
+│ URL                │ your-site.wp        │ php.wp               
+│ File location      │ www/your-site/      │ www/php/             
+└─────────────────────────────────────────────────────────────
+
+
+═══════════════════════════════════════════════════════════════
+                         FILE STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+WPronto\
+├── core\           (Nginx, PHP, MySQL, phpMyAdmin)
+├── config\         (Nginx & PHP configuration files)
+├── data\           (MySQL databases storage)
+├── template\       (WordPress template for new sites)
+├── www\            (Your WordPress sites folders)
+│   ├── default\    (Default localhost site)
+│   ├── php\        (PHP Learning Mode site – pure PHP)
+│   └── your-site\  (Your created WordPress sites)
+├── backups\        (Site backups: files + database exports)
+│   └── site-name\  (Backups organized by site)
+│       └── YYYY-MM-DD_HH-MM-SS\ (Timestamped backup folders)
+│           ├── files\           (Complete site files)
+│           └── site-name_db.sql (Database dump)
+├── logs\           (Nginx, PHP, MySQL, WPLaunch error logs)
+└── tmp\            (Temporary files)
+
+
+═══════════════════════════════════════════════════════════════
+                         TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+❌ Site shows 404 Not Found
+   → Restart the server (Stop → Start or Ctrl+Shift+X → Ctrl+Shift+S)
+   → Check if files were copied to www/your-site/
+
+❌ Can't start server (port 80 in use)
+   → WPronto automatically switches to port 8080
+   → Check the log for "using alternative ports" message
+   → Or manually stop Skype, Teams, or other web servers
+
+❌ Database connection error during WordPress install
+   → Database name: your-site_db
+   → Username: root
+   → Password: (leave empty)
+   → Host: 127.0.0.1
+
+❌ PHP Learning Mode site not working
+   → Ensure site name is exactly "php" (lowercase)
+   → Check files exist in: WPronto\www\php\
+   → Verify index.php has <?php tag
+   → Restart the server after creating
+
+❌ Restore failed with "pipe is being closed"
+   → This is fixed in v3.0 – automatic restore works now
+   → If still occurs, use Manual Restore method in backup guide
+
+❌ Restored site not showing in list
+   → Use automatic restore – it will appear automatically
+   → Or restart WPronto after manual restore
+
+❌ Restored site shows database connection error
+   → Automatic restore handles this perfectly
+   → For manual restore: verify database name matches site name + "_db"
+   → Check that username is "root" with no password
+
+❌ Can't find my backup files
+   → Backups are stored in: WPronto\backups\your-site-name\
+   → Each backup is in a folder named by date and time
+   → Example: 2026-06-03_14-30-45
+
+❌ Disk space is running low
+   → Backups can take significant space
+   → Manually delete old backups from backups\ folder
+   → Keep only 2-3 recent backups
+
+❌ PHP errors not showing in browser
+   → Check .user.ini in site folder has display_errors = On
+   → Or restart the server to apply settings
+
+❌ Cannot upload large files (>2MB)
+   → WPronto supports up to 256MB by default
+   → Check .user.ini in your site folder
+   → Verify upload_max_filesize and post_max_size values
+
+❌ Hotkeys not working
+   → Make sure WPronto window has focus (is active)
+   → Check that you're pressing Ctrl+Shift+[Key] (not just Ctrl)
+   → Try clicking the button with mouse to verify functionality
+
+
+═══════════════════════════════════════════════════════════════
+                        SUPPORT & CONTACT
+═══════════════════════════════════════════════════════════════
+
+• Bug Reports      : ovcharovcoder@gmail.com
+• Website          : https://ovcharovcoder.github.io/wpronto
+
+
+═══════════════════════════════════════════════════════════════
+                           LICENSE
+═══════════════════════════════════════════════════════════════
+
+WPronto is released under the MIT License.
+You are free to use, modify, and distribute this software.
+See the LICENSE file for more details.
+
+MIT License - Copyright (c) 2026 Andrii Ovcharov
+
+
+═══════════════════════════════════════════════════════════════
+                   Thank you for using WPronto! 🚀
+═══════════════════════════════════════════════════════════════
