@@ -1,0 +1,35 @@
+# Перейдіть у папку проєкту
+cd C:\WPronto
+
+# Запустіть скрипт
+.\build_and_publish.ps1
+
+-------------------------------------------
+
+якщо виникає помилка
+
+Error in C:\WPLaunch\installer_final.iss: The process cannot access the file because it is being used by another process.
+Compile aborted.
+
+Зупиніть всі процеси WPLaunch
+
+taskkill /f /im WPLaunchGUI.exe 2>$null
+taskkill /f /im nginx.exe 2>$null
+taskkill /f /im php-cgi.exe 2>$null
+taskkill /f /im mysqld.exe 2>$null
+
+Переконайтеся, що процесів немає
+
+Get-Process -Name WPLaunchGUI, nginx, php-cgi, mysqld -ErrorAction SilentlyContinue
+
+якщо є
+
+Запустіть PowerShell від імені адміністратора
+
+taskkill /f /im mysqld.exe
+
+Перевірте, що всі процеси зупинені
+
+Get-Process -Name nginx, php-cgi, mysqld -ErrorAction SilentlyContinue
+
+якщо все норм то можна збирати проект

@@ -3,8 +3,8 @@
         Fast, Simple & Powerful Local WordPress Environment
 ═══════════════════════════════════════════════════════════════
 
-Version: 3.0
-Release  Date: June 20, 2026
+Version: 4.0
+Release  Date: June 21, 2026
 Website: https://ovcharovcoder.github.io/wpronto
 Author:  Andrii Ovcharov
 
@@ -37,7 +37,7 @@ who want to learn PHP or build pure PHP applications without WordPress.
                          KEY FEATURES
 ═══════════════════════════════════════════════════════════════
 
-✅ One-click start/stop of full server stack (Nginx + PHP + MySQL)
+✅ One-click start/stop/restart of full server stack
 ✅ Full keyboard support with hotkeys for all major actions
 ✅ Multiple WordPress sites management on custom domains (*.wp)
 ✅ Built-in phpMyAdmin for easy database management
@@ -67,11 +67,12 @@ Ctrl+Shift+[Key] to avoid conflicts with system shortcuts.
 ├─────────────────────────────────────────────────────────────────
 │ Ctrl + Shift + S    │ Start Server                              
 │ Ctrl + Shift + X    │ Stop Server                             
+│ Ctrl + Shift + R    │ Restart Server (v4.0 new!)               
 │ Ctrl + Shift + A    │ Open Admin (WordPress dashboard)       
 │ Ctrl + Shift + P    │ Open phpMyAdmin                          
 │ Ctrl + Shift + C    │ Create New Site                         
 │ Ctrl + Shift + B    │ Backup Selected Site                      
-│ Ctrl + Shift + R    │ Restore from Backup                      
+│ Ctrl + Shift + F    │ Restore from Backup                      
 │ Ctrl + Shift + D    │ Delete Selected Site                      
 └─────────────────────────────────────────────────────────────────
 
@@ -166,48 +167,37 @@ DATABASE MANAGEMENT
 
 
 ═══════════════════════════════════════════════════════════════
-                         WHAT'S NEW IN v3.0
+                         WHAT'S NEW IN v4.0
 ═══════════════════════════════════════════════════════════════
 
+🔄 ONE-CLICK SERVER RESTART
+   No more stop → wait → start. Just click "Restart" button or press
+   Ctrl+Shift+R. Perfect for applying configuration changes quickly.
+
+🖱️ DOUBLE-CLICK TO OPEN ADMIN
+   Simply double-click any site in the list to instantly open its
+   WordPress admin panel. No more extra clicks!
+
+📂 RIGHT-CLICK CONTEXT MENU
+   Right-click any site for quick access to:
+   • Open Admin
+   • Open Folder (in Explorer)
+   • Backup
+   • Restore
+   • Delete
+
+⚡ IMPROVED Nginx RELOAD
+   Configuration changes (like creating a new site) now reload Nginx
+   without any downtime. Your other sites stay accessible!
+
+🔒 SMART PORT DETECTION
+   WPronto now detects if port 3306 (MySQL) is busy and warns you
+   before starting. No more crashes from conflicts with XAMPP/Laragon.
+
 ⌨️ EXPANDED HOTKEYS
-   
-💾 BACKUP & RESTORE (FULLY AUTOMATIC!)
-   Never lose your work again:
-   • One-click full backup (site files + database)
-   • One-click restore – select any backup and click Restore
-   • Automatic site recreation – even if the site was deleted!
-   • Backups stored in organized folders by site and date
-   • Keep multiple backup versions (daily backups recommended)
-   • Perfect for testing risky updates or plugins
-   • Restore from ANY backup version with visual selection
-
-📚 PHP LEARNING MODE
-   Learn PHP without WordPress complexity:
-   • Create pure PHP sites by entering "php" as site name
-   • No database required – start coding immediately
-   • Error reporting enabled by default
-   • Perfect for beginners and API development
-
-⚡ DEVELOPMENT OPTIMIZATIONS
-   Designed for efficient development:
-   • Error reporting turned ON (see issues immediately)
-   • Large file upload support (256MB)
-   • Switch PHP versions (8.3 / 8.5) without reinstalling
-   • Extended execution time for long scripts
-
-📊 ENHANCED MONITORING
-   Always know what's happening:
-   • Status bar shows current server state
-   • Detailed operation logs in real-time
-   • All logs saved to file for debugging
-   • Clear error messages when something goes wrong
-
-⚡ IMPROVED STABILITY
-   More reliable than ever:
-   • Automatic port detection (switches to 8080 if 80 is busy)
-   • File validation before starting services
-   • Better error handling and recovery
-   • MySQL stays running during restore for data integrity
+   New shortcuts added for faster workflow:
+   • Ctrl+Shift+R – Restart Server
+   • Ctrl+Shift+F – Restore from Backup
 
 
 ═══════════════════════════════════════════════════════════════
@@ -397,6 +387,11 @@ WPronto\
 ❌ Site shows 404 Not Found
    → Restart the server (Stop → Start or Ctrl+Shift+X → Ctrl+Shift+S)
    → Check if files were copied to www/your-site/
+
+❌ Can't start server (port 3306 in use)
+   → Another MySQL server is running (XAMPP, Laragon, OpenServer)
+   → Close other servers or stop their MySQL service
+   → WPronto will warn you before starting
 
 ❌ Can't start server (port 80 in use)
    → WPronto automatically switches to port 8080

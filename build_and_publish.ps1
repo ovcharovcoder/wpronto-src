@@ -1,7 +1,7 @@
-# build_and_publish.ps1 - Повна збірка та створення інсталятора (v3.0)
+# build_and_publish.ps1 - Повна збірка та створення інсталятора (v4.0)
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "   WPronto v3.0 - Build & Publish" -ForegroundColor Cyan
+Write-Host "   WPronto v4.0 - Build & Publish" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -178,7 +178,7 @@ $publishSize = [math]::Round((Get-ChildItem "C:\WPronto\publish" -Recurse -Error
 $fileCount = (Get-ChildItem "C:\WPronto\publish" -Recurse -File -ErrorAction SilentlyContinue).Count
 
 Write-Host "?? ІНФОРМАЦІЯ ПРО ЗБІРКУ:" -ForegroundColor Cyan
-Write-Host "   ?? Версія: 3.0" -ForegroundColor White
+Write-Host "   ?? Версія: 4.0" -ForegroundColor White
 Write-Host "   ?? Розмір: $publishSize MB" -ForegroundColor White
 Write-Host "   ?? Файлів: $fileCount" -ForegroundColor White
 Write-Host "   ?? Розташування: C:\WPronto\publish" -ForegroundColor White
@@ -191,7 +191,7 @@ if (Test-Path "C:\WPronto\publish\WProntoGUI.exe") {
 }
 Write-Host "========================================" -ForegroundColor Cyan
 
-Write-Host "`n? Готово! Збірка v3.0 успішно створена!" -ForegroundColor Green
+Write-Host "`n? Готово! Збірка v4.0 успішно створена!" -ForegroundColor Green
 
 # Опціонально: запустити програму після збірки
 $runAfterBuild = Read-Host "`nЗапустити програму? (y/n)"

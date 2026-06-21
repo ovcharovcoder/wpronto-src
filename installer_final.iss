@@ -1,9 +1,9 @@
-﻿; Inno Setup Script for WPronto - v3.0
+﻿; Inno Setup Script for WPronto - v4.0
 
 [Setup]
 AppId=WPronto
 AppName=WPronto — Local WP Environment
-AppVersion=3.0
+AppVersion=4.0
 AppPublisher=Andrii Ovcharov
 AppPublisherURL=https://github.com/ovcharovcoder/wpronto
 AppSupportURL=https://github.com/ovcharovcoder/wpronto
@@ -22,7 +22,7 @@ LicenseFile=C:\WPronto\license.txt
 DisableWelcomePage=yes
 
 OutputDir=C:\WPronto\Installer
-OutputBaseFilename=WPronto_v3.0
+OutputBaseFilename=WPronto_v4.0
 SetupIconFile=C:\WPronto\src\WPLaunchGUI\app.ico
 Compression=lzma
 SolidCompression=yes
