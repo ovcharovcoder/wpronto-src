@@ -223,8 +223,8 @@ namespace WPLaunchGUI
         private ListBox listSites;
         private RichTextBox txtLog;
         private SoftButton btnStart;
+        private SoftButton btnRestart;
         private SoftButton btnStop;
-        private SoftButton btnOpenLocalhost;
         private SoftButton btnPhpMyAdmin;
         private SoftButton btnCreateSite;
         private SoftButton btnBackupSite;
@@ -238,6 +238,7 @@ namespace WPLaunchGUI
         private Label btnTheme;
         private ComboBox comboPhpVersion;
         private Label lblPhpStatus;
+        private ToolTip toolTip;
 
         private float _dpiScale = 1.0f;
         private int ScaleInt(int value) => (int)(value * _dpiScale);
@@ -880,7 +881,7 @@ sync_binlog=0
 
             lblTitle = new Label
             {
-                Text = "WPronto v3.0",
+                Text = "WPronto v4.0",
                 Font = new Font("Segoe UI Semibold", 22f, FontStyle.Bold),
                 ForeColor = scheme.TextPrimary,
                 Location = new Point(ScaleInt(32), ScaleInt(25)),
@@ -1033,23 +1034,24 @@ sync_binlog=0
                 WrapContents = false
             };
 
+            // ===== НОВИЙ ПОРЯДОК КНОПОК: Start, Restart, Stop, phpMyAdmin =====
             btnStart = new SoftButton("Start", ButtonStyle.Primary, _dpiScale);
             btnStart.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
             btnStart.Click += BtnStart_Click;
+
+            btnRestart = new SoftButton("Restart", ButtonStyle.Warning, _dpiScale);
+            btnRestart.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
+            btnRestart.Click += BtnRestart_Click;
 
             btnStop = new SoftButton("Stop", ButtonStyle.Danger, _dpiScale);
             btnStop.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
             btnStop.Click += BtnStop_Click;
 
-            btnOpenLocalhost = new SoftButton("Open Admin", ButtonStyle.Primary, _dpiScale);
-            btnOpenLocalhost.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
-            btnOpenLocalhost.Click += BtnOpenAdmin_Click;
-
             btnPhpMyAdmin = new SoftButton("phpMyAdmin", ButtonStyle.Default, _dpiScale);
             btnPhpMyAdmin.Margin = new Padding(ScaleInt(2), 0, 0, 0);
             btnPhpMyAdmin.Click += BtnPhpMyAdmin_Click;
 
-            topButtonsPanel.Controls.AddRange(new Control[] { btnStart, btnStop, btnOpenLocalhost, btnPhpMyAdmin });
+            topButtonsPanel.Controls.AddRange(new Control[] { btnStart, btnRestart, btnStop, btnPhpMyAdmin });
 
             Label lblSitesTitle = new Label
             {
@@ -1069,10 +1071,170 @@ sync_binlog=0
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular),
                 ItemHeight = ScaleInt(32),
                 DrawMode = DrawMode.OwnerDrawFixed,
-                BackColor = scheme.BackgroundCard
+                BackColor = scheme.BackgroundCard,
+                Cursor = Cursors.Hand
             };
             listSites.DrawItem += ListSites_DrawItem;
             listSites.SelectedIndexChanged += ListSites_SelectedIndexChanged;
+
+            // ===== ПОДВІЙНИЙ КЛІК ДЛЯ ВІДКРИТТЯ АДМІНКИ =====
+            listSites.DoubleClick += (s, e) =>
+            {
+                if (listSites.SelectedItem != null)
+                {
+                    string siteName = listSites.SelectedItem.ToString();
+
+                    // Перевіряємо, чи сервер запущений
+                    if (!IsProcessRunning("nginx") || !IsProcessRunning("php-cgi"))
+                    {
+                        MessageBox.Show(
+                            "Server is not running!\n\nPlease start the server first.",
+                            "WPronto",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    bool isPhpOnly = IsPhpOnlySite(siteName);
+                    string url = isPhpOnly
+                        ? $"http://{siteName}.wp:{_webPort}/"
+                        : $"http://{siteName}.wp:{_webPort}/wp-admin";
+
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                        Log($"Opened via double-click: {url}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError(ex, "DoubleClick_OpenAdmin");
+                        MessageBox.Show($"Failed to open browser: {ex.Message}",
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            };
+
+            // ===== КОНТЕКСТНЕ МЕНЮ (ПРАВИЙ КЛІК) =====
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
+
+            ToolStripMenuItem openAdminItem = new ToolStripMenuItem("🌐 Open Admin");
+            openAdminItem.Click += (s, e) =>
+            {
+                if (listSites.SelectedItem != null)
+                {
+                    string siteName = listSites.SelectedItem.ToString();
+                    bool isPhpOnly = IsPhpOnlySite(siteName);
+                    string url = isPhpOnly
+                        ? $"http://{siteName}.wp:{_webPort}/"
+                        : $"http://{siteName}.wp:{_webPort}/wp-admin";
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                        Log($"Opened: {url}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError(ex, "ContextMenu_OpenAdmin");
+                    }
+                }
+            };
+            contextMenu.Items.Add(openAdminItem);
+
+            ToolStripMenuItem openProjectItem = new ToolStripMenuItem("📁 Open Project");
+            openProjectItem.Click += (s, e) =>
+            {
+                if (listSites.SelectedItem != null)
+                {
+                    string siteName = listSites.SelectedItem.ToString();
+                    string sitePath = Path.Combine(_wwwPath, siteName);
+                    if (Directory.Exists(sitePath))
+                    {
+                        try
+                        {
+                            Process.Start("explorer.exe", sitePath);
+                            Log($"Opened project folder: {sitePath}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError(ex, "OpenProject");
+                            MessageBox.Show($"Failed to open folder: {ex.Message}",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Site folder not found: {sitePath}", "WPronto",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Select a site first!", "WPronto",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            };
+            contextMenu.Items.Add(openProjectItem);
+
+            contextMenu.Items.Add(new ToolStripSeparator());
+
+            ToolStripMenuItem backupItem = new ToolStripMenuItem("💾 Backup");
+            backupItem.Click += (s, e) => BtnBackupSite_Click(s, e);
+            contextMenu.Items.Add(backupItem);
+
+            ToolStripMenuItem restoreItem = new ToolStripMenuItem("↩️ Restore");
+            restoreItem.Click += (s, e) => BtnRestoreBackup_Click(s, e);
+            contextMenu.Items.Add(restoreItem);
+
+            // ===== НОВИЙ ПУНКТ: OPEN BACKUP =====
+            ToolStripMenuItem openBackupItem = new ToolStripMenuItem("📁 Open Backup");
+            openBackupItem.Click += (s, e) =>
+            {
+                if (listSites.SelectedItem != null)
+                {
+                    string siteName = listSites.SelectedItem.ToString();
+                    string backupPath = Path.Combine(_backupPath, siteName);
+
+                    if (Directory.Exists(backupPath))
+                    {
+                        try
+                        {
+                            Process.Start("explorer.exe", backupPath);
+                            Log($"Opened backup folder: {backupPath}");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError(ex, "OpenBackup");
+                            MessageBox.Show($"Failed to open backup folder: {ex.Message}",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"No backups found for '{siteName}'.\n\n" +
+                            "Create a backup first using the Backup button.",
+                            "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Select a site first!", "WPronto",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            };
+            contextMenu.Items.Add(openBackupItem);
+
+            contextMenu.Items.Add(new ToolStripSeparator());
+
+            ToolStripMenuItem deleteItem = new ToolStripMenuItem("🗑️ Delete");
+            deleteItem.Click += (s, e) => BtnDeleteSite_Click(s, e);
+            contextMenu.Items.Add(deleteItem);
+
+            listSites.ContextMenuStrip = contextMenu;
+
+            // ===== ПІДКАЗКА ДЛЯ КОРИСТУВАЧА =====
+            toolTip = new ToolTip();
+            toolTip.SetToolTip(listSites, "Double-click to open admin panel\nRight-click for more options");
+
             cardSites.Controls.Add(listSites);
 
             Label lblLogsTitle = new Label
@@ -1186,6 +1348,31 @@ sync_binlog=0
             }
         }
 
+        // ===== НОВА КНОПКА RESTART =====
+        private async void BtnRestart_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                btnRestart.Enabled = false;
+                Log("Restarting server...");
+
+                // Зупиняємо сервер
+                BtnStop_Click(null, null);
+                await DelayAsync(1000);
+
+                // Запускаємо сервер
+                BtnStart_Click(null, null);
+
+                Log("Server restarted successfully!");
+                btnRestart.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex, "BtnRestart_Click");
+                btnRestart.Enabled = true;
+            }
+        }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             try
@@ -1200,9 +1387,9 @@ sync_binlog=0
                     BtnStop_Click(this, EventArgs.Empty);
                     return true;
                 }
-                if (keyData == (Keys.Control | Keys.Shift | Keys.A))
+                if (keyData == (Keys.Control | Keys.Shift | Keys.R))
                 {
-                    BtnOpenAdmin_Click(this, EventArgs.Empty);
+                    BtnRestart_Click(this, EventArgs.Empty);
                     return true;
                 }
                 if (keyData == (Keys.Control | Keys.Shift | Keys.P))
@@ -1220,7 +1407,7 @@ sync_binlog=0
                     BtnBackupSite_Click(this, EventArgs.Empty);
                     return true;
                 }
-                if (keyData == (Keys.Control | Keys.Shift | Keys.R))
+                if (keyData == (Keys.Control | Keys.Shift | Keys.F))
                 {
                     BtnRestoreBackup_Click(this, EventArgs.Empty);
                     return true;
@@ -1545,14 +1732,14 @@ sync_binlog=0
             }
         }
 
-        private void ReloadNginx()
+        private bool ReloadNginx()
         {
             try
             {
                 if (!IsProcessRunning("nginx"))
                 {
                     Log("Nginx is not running, skipping reload");
-                    return;
+                    return false;
                 }
 
                 var process = Process.Start(new ProcessStartInfo
@@ -1572,16 +1759,17 @@ sync_binlog=0
                     {
                         string error = process.StandardError.ReadToEnd();
                         Log($"Nginx reload error: {error}");
+                        return false;
                     }
-                    else
-                    {
-                        Log("Nginx reloaded successfully");
-                    }
+                    Log("Nginx reloaded successfully (no downtime)");
+                    return true;
                 }
+                return false;
             }
             catch (Exception ex)
             {
                 LogError(ex, "ReloadNginx");
+                return false;
             }
         }
 
@@ -1768,10 +1956,30 @@ sync_binlog=0
             {
                 Log("Running pre-startup checks...");
 
-                int[] portsToCheck = new int[] { Config.PhpPort, Config.MysqlPort };
+                // ===== ПЕРЕВІРКА ПОРТУ MYSQL (ЗАХИСТ ВІД КРАШУ) =====
+                if (!IsPortAvailable(Config.MysqlPort))
+                {
+                    Log($"⚠️ WARNING: Port {Config.MysqlPort} is busy!");
+                    Log("Another MySQL/MariaDB server might be running (XAMPP, Laragon, OpenServer).");
+                    Log("Please stop other local servers before starting WPronto.");
+
+                    DialogResult result = MessageBox.Show(
+                        $"⚠️ Port {Config.MysqlPort} is busy!\n\n" +
+                        "Another MySQL/MariaDB server appears to be running.\n" +
+                        "WPronto may fail to start correctly.\n\n" +
+                        "Continue anyway?",
+                        "Port Conflict",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (result == DialogResult.No)
+                        return false;
+                }
+
+                int[] portsToCheck = new int[] { Config.PhpPort };
                 if (!WaitForPortsAvailable(portsToCheck, 3000).Result)
                 {
-                    Log($"Ports {Config.PhpPort} or {Config.MysqlPort} are busy!");
+                    Log($"Port {Config.PhpPort} is busy!");
                     return false;
                 }
 
@@ -1831,6 +2039,7 @@ sync_binlog=0
                     lblStatus.Text = "● SERVER RUNNING";
                     lblStatus.ForeColor = scheme.StatusRunning;
                     btnStart.Enabled = false;
+                    btnRestart.Enabled = true;
                     btnStop.Enabled = true;
                 }
                 else
@@ -1838,6 +2047,7 @@ sync_binlog=0
                     lblStatus.Text = "● SERVER STOPPED";
                     lblStatus.ForeColor = scheme.StatusStopped;
                     btnStart.Enabled = true;
+                    btnRestart.Enabled = false;
                     btnStop.Enabled = false;
                 }
             }
@@ -2022,43 +2232,6 @@ sync_binlog=0
         }
 
         // =========================
-        // OPEN ADMIN
-        // =========================
-        private void BtnOpenAdmin_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (listSites.SelectedItem == null)
-                {
-                    MessageBox.Show("Select a site first!", "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                string siteName = listSites.SelectedItem.ToString() ?? "";
-                bool isPhpOnly = IsPhpOnlySite(siteName);
-
-                string url = isPhpOnly
-                    ? $"http://{siteName}.wp:{_webPort}/"
-                    : $"http://{siteName}.wp:{_webPort}/wp-admin";
-
-                Log($"Opened: {url}");
-                try
-                {
-                    Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-                }
-                catch (Exception ex)
-                {
-                    LogError(ex, "BtnOpenAdmin_Click - Process.Start");
-                    MessageBox.Show($"Failed to open browser: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError(ex, "BtnOpenAdmin_Click");
-            }
-        }
-
-        // =========================
         // OPEN PHPMYADMIN
         // =========================
         private void BtnPhpMyAdmin_Click(object sender, EventArgs e)
@@ -2166,7 +2339,15 @@ sync_binlog=0
                         AddHostEntry($"{siteName}.wp");
                         CreateDatabase(dbName);
                         CreateWpConfig(sitePath, dbName, siteName);
-                        ReloadNginx();
+
+                        // ===== ГАРЯЧИЙ ПЕРЕЗАПУСК NGINX (БЕЗ ЗУПИНКИ) =====
+                        if (!ReloadNginx())
+                        {
+                            Log("   Nginx reload failed, performing full restart...");
+                            KillProcess("nginx");
+                            StartProcessWithEnv(_nginxPath, $"-c \"{_nginxConf}\"", _nginxWorkingDir);
+                        }
+
                         LoadSites();
 
                         string port = _webPort == 80 ? "" : $":{_webPort}";
@@ -2252,7 +2433,14 @@ error_reporting = E_ALL";
 
                 AddHostEntry($"{siteName}.wp");
 
-                ReloadNginx();
+                // ===== ГАРЯЧИЙ ПЕРЕЗАПУСК NGINX (БЕЗ ЗУПИНКИ) =====
+                if (!ReloadNginx())
+                {
+                    Log("   Nginx reload failed, performing full restart...");
+                    KillProcess("nginx");
+                    StartProcessWithEnv(_nginxPath, $"-c \"{_nginxConf}\"", _nginxWorkingDir);
+                }
+
                 LoadSites();
 
                 string portStr = _webPort == 80 ? "" : $":{_webPort}";
