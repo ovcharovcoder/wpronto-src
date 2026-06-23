@@ -11,6 +11,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 
 namespace WPLaunchGUI
 {
@@ -243,6 +244,10 @@ namespace WPLaunchGUI
         private float _dpiScale = 1.0f;
         private int ScaleInt(int value) => (int)(value * _dpiScale);
 
+        // Константи для оптимізації
+        private const int MAX_LOG_LINES = 1000;
+        private const int STATUS_CHECK_INTERVAL_MS = 10000;
+
         // =========================
         // CONSTRUCTOR
         // =========================
@@ -291,7 +296,7 @@ namespace WPLaunchGUI
                 CleanupTempFiles();
 
                 _statusTimer = new System.Windows.Forms.Timer();
-                _statusTimer.Interval = 5000;
+                _statusTimer.Interval = STATUS_CHECK_INTERVAL_MS;
                 _statusTimer.Tick += (s, e) => CheckServerStatus();
                 _statusTimer.Start();
             }
@@ -510,7 +515,6 @@ fastcgi.logging = 0
                 _phpCgiPath = Path.Combine(_basePath, @"core\php", phpVersionFolder, "php-cgi.exe");
                 _phpWorkingDir = Path.Combine(_basePath, @"core\php", phpVersionFolder);
 
-                // ВАЖЛИВО: php.ini тепер у папці з php-cgi.exe
                 _phpIni = Path.Combine(_phpWorkingDir, "php.ini");
 
                 _mysqlPath = Path.Combine(_basePath, @"core\mysql\bin\mysqld.exe");
@@ -527,7 +531,6 @@ fastcgi.logging = 0
                 _pmaPath = Path.Combine(_basePath, @"core\phpmyadmin");
                 _backupPath = Path.Combine(_basePath, @"backups");
 
-                // Створюємо php.ini безпосередньо в папці PHP
                 CreatePhpIni();
 
                 try
@@ -576,70 +579,9 @@ fastcgi.logging = 0
         }
 
         // =========================
-        // PHP CONFIG (LEGACY - ЗБЕРЕЖЕНО ДЛЯ СУМІСНОСТІ)
+        // PHP CONFIG
         // =========================
         private static readonly UTF8Encoding Utf8NoBom = new UTF8Encoding(false);
-
-        // [Obsolete("Використовуйте CreatePhpIni() замість цього методу")]
-        private void CreateSinglePhpConfig(string version)
-        {
-            try
-            {
-                string basePathUnix = _basePath.Replace("\\", "/");
-                string versionFolder = $"php{version.Replace(".", "")}";
-                string phpIniPath = Path.Combine(_basePath, @"config\php", $"php_{version}.ini");
-
-                string phpIniContent = $@"[PHP]
-extension_dir = ""{basePathUnix}/core/php/{versionFolder}/ext""
-date.timezone = ""{Config.TimeZone}""
-display_errors = Off
-log_errors = On
-error_log = ""{basePathUnix}/logs/php_error_{version}.log""
-
-upload_max_filesize = {Config.UploadMaxSize}M
-post_max_size = {Config.UploadMaxSize}M
-memory_limit = {Config.MemoryLimit}M
-max_execution_time = 600
-max_input_time = 600
-max_input_vars = 5000
-
-extension=curl
-extension=gd
-extension=mbstring
-extension=mysqli
-extension=openssl
-extension=pdo_mysql
-extension=zip
-
-cgi.fix_pathinfo=1
-fastcgi.logging = 0
-";
-                File.WriteAllText(phpIniPath, phpIniContent, Utf8NoBom);
-            }
-            catch (Exception ex)
-            {
-                LogError(ex, $"CreateSinglePhpConfig - {version}");
-            }
-        }
-
-        // [Obsolete("Більше не використовується")]
-        private void EnsurePhpConfigs()
-        {
-            try
-            {
-                var versions = new[] { "8.3", "8.5" };
-                foreach (var version in versions)
-                {
-                    string phpIniPath = Path.Combine(_basePath, @"config\php", $"php_{version}.ini");
-                    if (!File.Exists(phpIniPath))
-                        CreateSinglePhpConfig(version);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError(ex, "EnsurePhpConfigs");
-            }
-        }
 
         // =========================
         // NGINX CONFIG
@@ -658,7 +600,6 @@ fastcgi.logging = 0
                     }
                 }
 
-                // Перевіряємо, чи існує php.ini в папці PHP
                 if (!File.Exists(_phpIni))
                 {
                     CreatePhpIni();
@@ -698,6 +639,7 @@ fastcgi.logging = 0
 
                 string basePathUnix = _basePath.Replace("\\", "/");
 
+                // Окремий server блок для phpMyAdmin на порту 8080
                 string nginxConfig =
         "worker_processes  1;\n" +
         "events { worker_connections 1024; }\n\n" +
@@ -714,6 +656,7 @@ fastcgi.logging = 0
         "    proxy_busy_buffers_size 256k;\n\n" +
         $"    access_log   \"{basePathUnix}/logs/nginx_access.log\";\n" +
         $"    error_log    \"{basePathUnix}/logs/nginx_error.log\";\n\n" +
+        "    # Main site\n" +
         "    server {\n" +
         $"        listen       {_webPort};\n" +
         "        server_name  localhost;\n" +
@@ -721,16 +664,6 @@ fastcgi.logging = 0
         "        index        index.php index.html;\n\n" +
         "        location / {\n" +
         "            try_files $uri $uri/ =404;\n" +
-        "        }\n\n" +
-        "        location /phpmyadmin {\n" +
-        $"            alias {basePathUnix}/core/phpmyadmin;\n" +
-        "            index index.php;\n\n" +
-        "            location ~ \\.php$ {\n" +
-        "                fastcgi_pass 127.0.0.1:9000;\n" +
-        "                fastcgi_param SCRIPT_FILENAME $request_filename;\n" +
-        "                include fastcgi_params;\n" +
-        "                fastcgi_read_timeout 600;\n" +
-        "            }\n" +
         "        }\n\n" +
         "        location ~ \\.php$ {\n" +
         "            try_files $uri =404;\n" +
@@ -741,13 +674,29 @@ fastcgi.logging = 0
         "            fastcgi_send_timeout 600;\n" +
         "        }\n" +
         "    }\n\n" +
+        "    # phpMyAdmin on separate port\n" +
+        "    server {\n" +
+        $"        listen       8080;\n" +
+        "        server_name  localhost;\n" +
+        $"        root         \"{basePathUnix}/core/phpmyadmin\";\n" +
+        "        index        index.php;\n\n" +
+        "        location / {\n" +
+        "            try_files $uri $uri/ =404;\n" +
+        "        }\n\n" +
+        "        location ~ \\.php$ {\n" +
+        "            try_files $uri =404;\n" +
+        "            fastcgi_pass 127.0.0.1:9000;\n" +
+        "            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n" +
+        "            include fastcgi_params;\n" +
+        "            fastcgi_read_timeout 600;\n" +
+        "        }\n" +
+        "    }\n\n" +
         $"    include {basePathUnix}/config/nginx/sites/*.conf;\n" +
         "}\n";
 
                 File.WriteAllText(_nginxConf, nginxConfig, Encoding.ASCII);
                 LogToFile($"nginx.conf created at: {_nginxConf}");
 
-                // Створюємо my.ini для MySQL
                 if (!File.Exists(_mysqlConfPath))
                 {
                     string mysqlDataUnix = _mysqlData.Replace("\\", "/");
@@ -985,7 +934,6 @@ sync_binlog=0
                                     SavePhpVersionSetting(newVersion);
                                     InitializePaths();
 
-                                    // Переконуємося, що php.ini створено для нової версії
                                     if (!File.Exists(_phpIni))
                                     {
                                         CreatePhpIni();
@@ -1008,7 +956,6 @@ sync_binlog=0
                                 SavePhpVersionSetting(newVersion);
                                 InitializePaths();
 
-                                // Переконуємося, що php.ini створено для нової версії
                                 if (!File.Exists(_phpIni))
                                 {
                                     CreatePhpIni();
@@ -1034,7 +981,6 @@ sync_binlog=0
                 WrapContents = false
             };
 
-            // ===== НОВИЙ ПОРЯДОК КНОПОК: Start, Restart, Stop, phpMyAdmin =====
             btnStart = new SoftButton("Start", ButtonStyle.Primary, _dpiScale);
             btnStart.Margin = new Padding(ScaleInt(2), 0, ScaleInt(18), 0);
             btnStart.Click += BtnStart_Click;
@@ -1062,7 +1008,6 @@ sync_binlog=0
                 AutoSize = true
             };
 
-            // ===== КАРТКА ЗІ СПИСКОМ САЙТІВ =====
             ModernCard cardSites = new ModernCard(ScaleInt(32), ScaleInt(175), ScaleInt(260), ScaleInt(285), _dpiScale);
             listSites = new ListBox
             {
@@ -1077,14 +1022,12 @@ sync_binlog=0
             listSites.DrawItem += ListSites_DrawItem;
             listSites.SelectedIndexChanged += ListSites_SelectedIndexChanged;
 
-            // ===== ПОДВІЙНИЙ КЛІК ДЛЯ ВІДКРИТТЯ АДМІНКИ =====
             listSites.DoubleClick += (s, e) =>
             {
                 if (listSites.SelectedItem != null)
                 {
                     string siteName = listSites.SelectedItem.ToString();
 
-                    // Перевіряємо, чи сервер запущений
                     if (!IsProcessRunning("nginx") || !IsProcessRunning("php-cgi"))
                     {
                         MessageBox.Show(
@@ -1114,7 +1057,6 @@ sync_binlog=0
                 }
             };
 
-            // ===== КОНТЕКСТНЕ МЕНЮ (ПРАВИЙ КЛІК) =====
             ContextMenuStrip contextMenu = new ContextMenuStrip();
 
             ToolStripMenuItem openAdminItem = new ToolStripMenuItem("🌐 Open Admin");
@@ -1185,7 +1127,6 @@ sync_binlog=0
             restoreItem.Click += (s, e) => BtnRestoreBackup_Click(s, e);
             contextMenu.Items.Add(restoreItem);
 
-            // ===== НОВИЙ ПУНКТ: OPEN BACKUP =====
             ToolStripMenuItem openBackupItem = new ToolStripMenuItem("📁 Open Backup");
             openBackupItem.Click += (s, e) =>
             {
@@ -1231,7 +1172,6 @@ sync_binlog=0
 
             listSites.ContextMenuStrip = contextMenu;
 
-            // ===== ПІДКАЗКА ДЛЯ КОРИСТУВАЧА =====
             toolTip = new ToolTip();
             toolTip.SetToolTip(listSites, "Double-click to open admin panel\nRight-click for more options");
 
@@ -1246,7 +1186,6 @@ sync_binlog=0
                 AutoSize = true
             };
 
-            // ===== КАРТКА З ЛОГАМИ =====
             ModernCard cardLogs = new ModernCard(ScaleInt(315), ScaleInt(175), ScaleInt(485), ScaleInt(285), _dpiScale);
             txtLog = new RichTextBox
             {
@@ -1259,7 +1198,6 @@ sync_binlog=0
             };
             cardLogs.Controls.Add(txtLog);
 
-            // ===== КНОПКИ ВНИЗУ =====
             btnCreateSite = new SoftButton("Create", ButtonStyle.Primary, _dpiScale);
             btnCreateSite.Location = new Point(ScaleInt(32), ScaleInt(480));
             btnCreateSite.Width = ScaleInt(100);
@@ -1308,7 +1246,6 @@ sync_binlog=0
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular)
             };
 
-            // ===== ДОДАЄМО ВСІ КОНТРОЛИ =====
             this.Controls.Add(lblTitle);
             this.Controls.Add(lblSubtitle);
             this.Controls.Add(lblStatus);
@@ -1348,7 +1285,6 @@ sync_binlog=0
             }
         }
 
-        // ===== НОВА КНОПКА RESTART =====
         private async void BtnRestart_Click(object sender, EventArgs e)
         {
             try
@@ -1356,11 +1292,9 @@ sync_binlog=0
                 btnRestart.Enabled = false;
                 Log("Restarting server...");
 
-                // Зупиняємо сервер
                 BtnStop_Click(null, null);
                 await DelayAsync(1000);
 
-                // Запускаємо сервер
                 BtnStart_Click(null, null);
 
                 Log("Server restarted successfully!");
@@ -1427,18 +1361,7 @@ sync_binlog=0
 
         private void ListSites_SelectedIndexChanged(object sender, EventArgs e)
         {
-            try
-            {
-                if (listSites.SelectedItem != null)
-                {
-                    string siteName = listSites.SelectedItem.ToString();
-                    Log($"Selected site: {siteName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError(ex, "ListSites_SelectedIndexChanged");
-            }
+            // No logging to avoid log spam
         }
 
         // =========================
@@ -1561,7 +1484,8 @@ sync_binlog=0
                 {
                     try
                     {
-                        if (File.GetCreationTime(file) < DateTime.Now.AddDays(-1))
+                        // Видаляємо файли старші 1 години (оптимізація)
+                        if (File.GetCreationTime(file) < DateTime.Now.AddHours(-1))
                             File.Delete(file);
                     }
                     catch { }
@@ -1693,6 +1617,16 @@ sync_binlog=0
 
                 string logMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
                 txtLog.AppendText(logMessage + Environment.NewLine);
+
+                // Обмежуємо кількість рядків у лозі для оптимізації
+                if (txtLog.Lines.Length > MAX_LOG_LINES)
+                {
+                    var lines = txtLog.Lines;
+                    var newLines = new string[MAX_LOG_LINES];
+                    Array.Copy(lines, lines.Length - MAX_LOG_LINES, newLines, 0, MAX_LOG_LINES);
+                    txtLog.Lines = newLines;
+                }
+
                 txtLog.ScrollToCaret();
                 LogToFile(message);
             }
@@ -1931,7 +1865,6 @@ sync_binlog=0
                     UseShellExecute = false
                 };
 
-                // Для PHP додаємо змінні середовища
                 if (path.Contains("php-cgi.exe"))
                 {
                     psi.EnvironmentVariables["PHP_FCGI_MAX_REQUESTS"] = "0";
@@ -1950,13 +1883,12 @@ sync_binlog=0
         // =========================
         // VALIDATE PRE-STARTUP
         // =========================
-        private bool ValidatePreStartup()
+        private async Task<bool> ValidatePreStartupAsync()
         {
             try
             {
                 Log("Running pre-startup checks...");
 
-                // ===== ПЕРЕВІРКА ПОРТУ MYSQL (ЗАХИСТ ВІД КРАШУ) =====
                 if (!IsPortAvailable(Config.MysqlPort))
                 {
                     Log($"⚠️ WARNING: Port {Config.MysqlPort} is busy!");
@@ -1977,7 +1909,7 @@ sync_binlog=0
                 }
 
                 int[] portsToCheck = new int[] { Config.PhpPort };
-                if (!WaitForPortsAvailable(portsToCheck, 3000).Result)
+                if (!await WaitForPortsAvailable(portsToCheck, 3000))
                 {
                     Log($"Port {Config.PhpPort} is busy!");
                     return false;
@@ -2098,63 +2030,68 @@ sync_binlog=0
                     return;
                 }
 
-                if (IsProcessRunning("nginx") || IsProcessRunning("php-cgi") || IsProcessRunning("mysqld"))
+                bool needStopNginx = IsProcessRunning("nginx");
+                bool needStopPhp = IsProcessRunning("php-cgi");
+
+                if (needStopNginx || needStopPhp)
                 {
-                    BtnStop_Click(sender, e);
+                    Log("Stopping web server (Nginx + PHP) before restart...");
+                    if (needStopNginx) StopProcessGracefully("nginx", 2000);
+                    if (needStopPhp) StopProcessGracefully("php-cgi", 1500);
                     await DelayAsync(800);
-                }
-
-                if (!ValidatePreStartup())
-                {
-                    Log("Server startup validation failed!");
-                    return;
-                }
-
-                Log($"Starting services with PHP {_currentPhpVersion}...");
-                Log($"Nginx version: {GetNginxVersion()}");
-                Log($"Using port: {_webPort}");
-                Log($"PHP config path: {_phpIni}");
-                Log($"PHP working dir: {_phpWorkingDir}");
-
-                string mysqlDataUnix = _mysqlData.Replace("\\", "/");
-
-                bool mysqlNeedsInit = !Directory.Exists(Path.Combine(_mysqlData, "mysql"));
-
-                if (mysqlNeedsInit)
-                {
-                    Log("Initializing MySQL...");
-                    var initProcess = Process.Start(new ProcessStartInfo
-                    {
-                        FileName = _mysqlPath,
-                        Arguments = $"--initialize-insecure --datadir=\"{mysqlDataUnix}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = _mysqlWorkingDir
-                    });
-
-                    if (initProcess != null)
-                    {
-                        if (!initProcess.WaitForExit(30000))
-                        {
-                            Log("MySQL initialization timeout, but continuing...");
-                            try { initProcess.Kill(); } catch { }
-                        }
-                        else
-                        {
-                            Log("MySQL initialized");
-                        }
-                    }
-                }
-
-                int[] portsToCheck = new int[] { Config.PhpPort, Config.MysqlPort };
-                if (!await WaitForPortsAvailable(portsToCheck, 5000))
-                {
-                    Log($"Ports {Config.PhpPort} or {Config.MysqlPort} are not available!");
-                    return;
                 }
 
                 if (!IsProcessRunning("mysqld"))
                 {
+                    Log("MySQL is not running, starting...");
+
+                    if (!await ValidatePreStartupAsync())
+                    {
+                        Log("Server startup validation failed!");
+                        return;
+                    }
+
+                    Log($"Starting services with PHP {_currentPhpVersion}...");
+                    Log($"Nginx version: {GetNginxVersion()}");
+                    Log($"Using port: {_webPort}");
+
+                    string mysqlDataUnix = _mysqlData.Replace("\\", "/");
+
+                    bool mysqlNeedsInit = !Directory.Exists(Path.Combine(_mysqlData, "mysql"));
+
+                    if (mysqlNeedsInit)
+                    {
+                        Log("Initializing MySQL...");
+                        var initProcess = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = _mysqlPath,
+                            Arguments = $"--initialize-insecure --datadir=\"{mysqlDataUnix}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WorkingDirectory = _mysqlWorkingDir
+                        });
+
+                        if (initProcess != null)
+                        {
+                            if (!initProcess.WaitForExit(30000))
+                            {
+                                Log("MySQL initialization timeout, but continuing...");
+                                try { initProcess.Kill(); } catch { }
+                            }
+                            else
+                            {
+                                Log("MySQL initialized");
+                            }
+                        }
+                    }
+
+                    int[] portsToCheck = new int[] { Config.PhpPort, Config.MysqlPort };
+                    if (!await WaitForPortsAvailable(portsToCheck, 5000))
+                    {
+                        Log($"Ports {Config.PhpPort} or {Config.MysqlPort} are not available!");
+                        return;
+                    }
+
                     Log("Starting MySQL...");
                     string mysqlArgs = $"--defaults-file=\"{_mysqlConfPath}\" --datadir=\"{mysqlDataUnix}\" --bind-address=127.0.0.1 --port={Config.MysqlPort}";
                     if (!StartProcessSafely(_mysqlPath, mysqlArgs, _mysqlWorkingDir, "MySQL"))
@@ -2166,10 +2103,9 @@ sync_binlog=0
                 }
                 else
                 {
-                    Log("MySQL is already running");
+                    Log("MySQL is already running, skipping restart");
                 }
 
-                // Перед запуском PHP переконуємося, що php.ini існує
                 if (!File.Exists(_phpIni))
                 {
                     Log($"PHP config not found, creating...");
@@ -2198,7 +2134,7 @@ sync_binlog=0
 
                 Log($"Server is running with PHP {_currentPhpVersion}!");
                 Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/ - WordPress");
-                Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/phpmyadmin - phpMyAdmin");
+                Log($"   http://localhost:8080/ - phpMyAdmin");
                 Log($"   Max upload size: {Config.UploadMaxSize}MB");
             }
             catch (Exception ex)
@@ -2238,7 +2174,7 @@ sync_binlog=0
         {
             try
             {
-                string url = $"http://localhost:{_webPort}/phpmyadmin";
+                string url = $"http://localhost:8080/";
                 try
                 {
                     Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
@@ -2311,7 +2247,7 @@ sync_binlog=0
                     }
                     else
                     {
-                        CopyDirectory(_templatePath, sitePath);
+                        CopyDirectoryIterative(_templatePath, sitePath);
 
                         string userIniPath = Path.Combine(sitePath, ".user.ini");
                         string userIniContent = $"upload_max_filesize = {Config.UploadMaxSize}M\npost_max_size = {Config.UploadMaxSize}M\nmemory_limit = {Config.MemoryLimit}M\nmax_execution_time = 600\nmax_input_time = 600";
@@ -2340,7 +2276,6 @@ sync_binlog=0
                         CreateDatabase(dbName);
                         CreateWpConfig(sitePath, dbName, siteName);
 
-                        // ===== ГАРЯЧИЙ ПЕРЕЗАПУСК NGINX (БЕЗ ЗУПИНКИ) =====
                         if (!ReloadNginx())
                         {
                             Log("   Nginx reload failed, performing full restart...");
@@ -2433,7 +2368,6 @@ error_reporting = E_ALL";
 
                 AddHostEntry($"{siteName}.wp");
 
-                // ===== ГАРЯЧИЙ ПЕРЕЗАПУСК NGINX (БЕЗ ЗУПИНКИ) =====
                 if (!ReloadNginx())
                 {
                     Log("   Nginx reload failed, performing full restart...");
@@ -2504,14 +2438,14 @@ error_reporting = E_ALL";
                     "    define( 'WP_SITEURL', 'http://" + siteName + ".wp" + port + "' );\n" +
                     "    define( 'WP_HOME',    'http://" + siteName + ".wp" + port + "' );\n" +
                     "}\n\n" +
-                    "define( 'AUTH_KEY',         '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'SECURE_AUTH_KEY',  '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'LOGGED_IN_KEY',    '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'NONCE_KEY',        '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'AUTH_SALT',        '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'SECURE_AUTH_SALT', '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'LOGGED_IN_SALT',   '" + GenerateRandomKey(64) + "' );\n" +
-                    "define( 'NONCE_SALT',       '" + GenerateRandomKey(64) + "' );\n\n" +
+                    "define( 'AUTH_KEY',         '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'SECURE_AUTH_KEY',  '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'LOGGED_IN_KEY',    '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'NONCE_KEY',        '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'AUTH_SALT',        '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'SECURE_AUTH_SALT', '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'LOGGED_IN_SALT',   '" + GenerateSecureKey(64) + "' );\n" +
+                    "define( 'NONCE_SALT',       '" + GenerateSecureKey(64) + "' );\n\n" +
                     "$table_prefix = 'wp_';\n" +
                     "define( 'WP_DEBUG', false );\n" +
                     "define( 'WP_DEBUG_DISPLAY', false );\n" +
@@ -2528,11 +2462,21 @@ error_reporting = E_ALL";
             }
         }
 
-        private string GenerateRandomKey(int length)
+        // =========================
+        // CRYPTOGRAPHICALLY SECURE KEY GENERATOR
+        // =========================
+        private string GenerateSecureKey(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?";
-            var random = new Random();
-            return new string(Enumerable.Range(0, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
+            byte[] bytes = new byte[length];
+            RandomNumberGenerator.Fill(bytes);
+
+            char[] result = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = chars[bytes[i] % chars.Length];
+            }
+            return new string(result);
         }
 
         // =========================
@@ -2577,7 +2521,7 @@ error_reporting = E_ALL";
             try
             {
                 string filesBackupDir = Path.Combine(backupDir, "files");
-                CopyDirectory(sitePath, filesBackupDir);
+                CopyDirectoryIterative(sitePath, filesBackupDir);
                 LogToFile($"   Files backup: {filesBackupDir}");
             }
             catch (Exception ex)
@@ -2734,7 +2678,7 @@ error_reporting = E_ALL";
                         try { File.Delete(file); } catch { }
                     }
 
-                    CopyDirectory(filesBackup, sitePath);
+                    CopyDirectoryIterative(filesBackup, sitePath);
                     Log($"   Files restored from: {filesBackup}");
                 }
                 else
@@ -3168,21 +3112,37 @@ error_reporting = E_ALL";
         }
 
         // =========================
-        // COPY DIRECTORY
+        // COPY DIRECTORY (ITERATIVE - ОПТИМІЗОВАНИЙ)
         // =========================
-        private void CopyDirectory(string source, string dest)
+        private void CopyDirectoryIterative(string source, string dest)
         {
             try
             {
                 Directory.CreateDirectory(dest);
-                foreach (var f in Directory.GetFiles(source))
-                    File.Copy(f, Path.Combine(dest, Path.GetFileName(f)), true);
-                foreach (var d in Directory.GetDirectories(source))
-                    CopyDirectory(d, Path.Combine(dest, Path.GetFileName(d)));
+
+                // Використовуємо ітеративний підхід замість рекурсивного
+                var stack = new Stack<(string Source, string Dest)>();
+                stack.Push((source, dest));
+
+                while (stack.Count > 0)
+                {
+                    var (src, dst) = stack.Pop();
+                    Directory.CreateDirectory(dst);
+
+                    foreach (var file in Directory.GetFiles(src))
+                    {
+                        File.Copy(file, Path.Combine(dst, Path.GetFileName(file)), true);
+                    }
+
+                    foreach (var dir in Directory.GetDirectories(src))
+                    {
+                        stack.Push((dir, Path.Combine(dst, Path.GetFileName(dir))));
+                    }
+                }
             }
             catch (Exception ex)
             {
-                LogError(ex, $"CopyDirectory - {source} -> {dest}");
+                LogError(ex, $"CopyDirectoryIterative - {source} -> {dest}");
                 throw;
             }
         }
