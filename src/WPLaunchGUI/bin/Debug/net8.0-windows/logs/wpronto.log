@@ -354,3 +354,26 @@
 2026-06-22 16:33:06 - Please restart the program as Administrator for full functionality
 2026-06-22 16:33:09 - Stopping services gracefully...
 2026-06-22 16:33:20 - All services stopped
+2026-06-23 14:15:42 - Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-23 14:15:43 - Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-23 14:15:43 - nginx.conf created at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-23 14:15:43 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-23 14:15:43 - NOT RUNNING AS ADMINISTRATOR!
+2026-06-23 14:15:43 - Hosts file modification will not work!
+2026-06-23 14:15:43 - Virtual domains like site.wp will not resolve!
+2026-06-23 14:15:43 - Please restart the program as Administrator for full functionality
+2026-06-23 14:15:53 - MySQL is not running, starting...
+2026-06-23 14:15:53 - Running pre-startup checks...
+2026-06-23 14:15:55 - Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-23 14:15:55 - Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-23 14:15:56 - Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-23 14:15:56 - Required files are missing!
+2026-06-23 14:15:56 - Server startup validation failed!
+2026-06-23 14:57:55 - Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-23 14:57:56 - Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-23 14:57:56 - nginx.conf created at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-23 14:57:56 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-23 14:57:56 - NOT RUNNING AS ADMINISTRATOR!
+2026-06-23 14:57:56 - Hosts file modification will not work!
+2026-06-23 14:57:56 - Virtual domains like site.wp will not resolve!
+2026-06-23 14:57:56 - Please restart the program as Administrator for full functionality

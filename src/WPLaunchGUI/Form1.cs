@@ -215,7 +215,6 @@ namespace WPLaunchGUI
         private string _mysqlConfPath = string.Empty;
 
         private int _webPort = Config.DefaultPort;
-        private int _pmaPort = Config.DefaultPort;
 
         // PHP version
         private string _currentPhpVersion = "8.3";
@@ -244,7 +243,6 @@ namespace WPLaunchGUI
         private float _dpiScale = 1.0f;
         private int ScaleInt(int value) => (int)(value * _dpiScale);
 
-        // Константи для оптимізації
         private const int MAX_LOG_LINES = 1000;
         private const int STATUS_CHECK_INTERVAL_MS = 10000;
 
@@ -490,6 +488,12 @@ fastcgi.logging = 0
             }
         }
 
+        private void EnsurePhpIni()
+        {
+            if (!File.Exists(_phpIni))
+                CreatePhpIni();
+        }
+
         // =========================
         // INITIALIZE PATHS
         // =========================
@@ -531,7 +535,7 @@ fastcgi.logging = 0
                 _pmaPath = Path.Combine(_basePath, @"core\phpmyadmin");
                 _backupPath = Path.Combine(_basePath, @"backups");
 
-                CreatePhpIni();
+                EnsurePhpIni();
 
                 try
                 {
@@ -600,10 +604,7 @@ fastcgi.logging = 0
                     }
                 }
 
-                if (!File.Exists(_phpIni))
-                {
-                    CreatePhpIni();
-                }
+                EnsurePhpIni();
 
                 string mimePath = Path.Combine(_nginxConfDir, "mime.types");
                 if (!File.Exists(mimePath))
@@ -639,7 +640,6 @@ fastcgi.logging = 0
 
                 string basePathUnix = _basePath.Replace("\\", "/");
 
-                // Окремий server блок для phpMyAdmin на порту 8080
                 string nginxConfig =
         "worker_processes  1;\n" +
         "events { worker_connections 1024; }\n\n" +
@@ -691,7 +691,7 @@ fastcgi.logging = 0
         "            fastcgi_read_timeout 600;\n" +
         "        }\n" +
         "    }\n\n" +
-        $"    include {basePathUnix}/config/nginx/sites/*.conf;\n" +
+        $"    include \"{basePathUnix}/config/nginx/sites/*.conf\";\n" +
         "}\n";
 
                 File.WriteAllText(_nginxConf, nginxConfig, Encoding.ASCII);
@@ -934,10 +934,7 @@ sync_binlog=0
                                     SavePhpVersionSetting(newVersion);
                                     InitializePaths();
 
-                                    if (!File.Exists(_phpIni))
-                                    {
-                                        CreatePhpIni();
-                                    }
+                                    EnsurePhpIni();
 
                                     await DelayAsync(1000);
                                     BtnStart_Click(null, null);
@@ -956,10 +953,7 @@ sync_binlog=0
                                 SavePhpVersionSetting(newVersion);
                                 InitializePaths();
 
-                                if (!File.Exists(_phpIni))
-                                {
-                                    CreatePhpIni();
-                                }
+                                EnsurePhpIni();
 
                                 lblPhpStatus.Text = $"Active: {newVersion} (next start)";
                                 Log($"PHP version set to {newVersion} (will be used on next start)");
@@ -1186,7 +1180,6 @@ sync_binlog=0
                 AutoSize = true
             };
 
-            ModernCard cardLogs = new ModernCard(ScaleInt(315), ScaleInt(175), ScaleInt(485), ScaleInt(285), _dpiScale);
             txtLog = new RichTextBox
             {
                 Dock = DockStyle.Fill,
@@ -1196,6 +1189,18 @@ sync_binlog=0
                 ForeColor = scheme.TextSecondary,
                 Font = new Font("Consolas", 9f, FontStyle.Regular)
             };
+            txtLog.Click += (s, e) =>
+            {
+                string logFile = Path.Combine(_logsPath, "wpronto.log");
+                if (File.Exists(logFile))
+                {
+                    try { Process.Start("notepad.exe", logFile); }
+                    catch { }
+                }
+            };
+            toolTip.SetToolTip(txtLog, "Click to open log file in Notepad");
+
+            ModernCard cardLogs = new ModernCard(ScaleInt(315), ScaleInt(175), ScaleInt(485), ScaleInt(285), _dpiScale);
             cardLogs.Controls.Add(txtLog);
 
             btnCreateSite = new SoftButton("Create", ButtonStyle.Primary, _dpiScale);
@@ -1290,19 +1295,43 @@ sync_binlog=0
             try
             {
                 btnRestart.Enabled = false;
-                Log("Restarting server...");
+                Log("Restarting web server (Nginx + PHP)...");
+                Log("MySQL will remain running to preserve database connections.");
 
-                BtnStop_Click(null, null);
-                await DelayAsync(1000);
+                StopProcessGracefully("nginx", 2000);
+                StopProcessGracefully("php-cgi", 1500);
+                await DelayAsync(800);
 
-                BtnStart_Click(null, null);
+                EnsurePhpIni();
 
-                Log("Server restarted successfully!");
-                btnRestart.Enabled = true;
+                Log($"Starting PHP-CGI {_currentPhpVersion}...");
+                string phpArgs = $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"";
+                if (!StartProcessSafely(_phpCgiPath, phpArgs, _phpWorkingDir, "PHP-CGI"))
+                {
+                    Log("Failed to start PHP-CGI!");
+                    return;
+                }
+                await DelayAsync(Config.ProcessStartDelay);
+
+                Log("Starting Nginx...");
+                if (!StartProcessSafely(_nginxPath, $"-c \"{_nginxConf}\"", _nginxWorkingDir, "Nginx"))
+                {
+                    Log("Failed to start Nginx!");
+                    return;
+                }
+                await DelayAsync(Config.NginxStartDelay);
+
+                CheckServerStatus();
+                Log("Web server restarted. MySQL connection preserved.");
+                Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/ - WordPress");
+                Log($"   http://localhost:8080/ - phpMyAdmin");
             }
             catch (Exception ex)
             {
                 LogError(ex, "BtnRestart_Click");
+            }
+            finally
+            {
                 btnRestart.Enabled = true;
             }
         }
@@ -1484,7 +1513,6 @@ sync_binlog=0
                 {
                     try
                     {
-                        // Видаляємо файли старші 1 години (оптимізація)
                         if (File.GetCreationTime(file) < DateTime.Now.AddHours(-1))
                             File.Delete(file);
                     }
@@ -1583,7 +1611,6 @@ sync_binlog=0
             try
             {
                 _webPort = Config.DefaultPort;
-                _pmaPort = Config.DefaultPort;
                 if (!IsPortAvailable(Config.DefaultPort))
                 {
                     _webPort = Config.AlternativePort;
@@ -1618,7 +1645,6 @@ sync_binlog=0
                 string logMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
                 txtLog.AppendText(logMessage + Environment.NewLine);
 
-                // Обмежуємо кількість рядків у лозі для оптимізації
                 if (txtLog.Lines.Length > MAX_LOG_LINES)
                 {
                     var lines = txtLog.Lines;
@@ -1739,7 +1765,7 @@ sync_binlog=0
                 string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "phpversion.config");
                 if (File.Exists(configPath))
                 {
-                    string version = File.ReadAllText(configPath);
+                    string version = File.ReadAllText(configPath).Trim();
                     if (version == "8.3" || version == "8.5")
                         return version;
                 }
@@ -1921,16 +1947,7 @@ sync_binlog=0
                     return false;
                 }
 
-                if (!File.Exists(_phpIni))
-                {
-                    Log($"PHP config not found: {_phpIni}");
-                    CreatePhpIni();
-                    if (!File.Exists(_phpIni))
-                    {
-                        Log($"Failed to create PHP config!");
-                        return false;
-                    }
-                }
+                EnsurePhpIni();
 
                 string[] requiredDirs = { _wwwPath, _logsPath, _tmpPath, _mysqlData };
                 foreach (var dir in requiredDirs)
@@ -2106,11 +2123,7 @@ sync_binlog=0
                     Log("MySQL is already running, skipping restart");
                 }
 
-                if (!File.Exists(_phpIni))
-                {
-                    Log($"PHP config not found, creating...");
-                    CreatePhpIni();
-                }
+                EnsurePhpIni();
 
                 Log($"Starting PHP-CGI {_currentPhpVersion}...");
                 string phpArgs = $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"";
@@ -2247,6 +2260,19 @@ sync_binlog=0
                     }
                     else
                     {
+                        if (!IsValidWordPressInstall(_templatePath))
+                        {
+                            MessageBox.Show("Template folder is missing required WordPress files!\n\n" +
+                                "Please ensure you have a complete WordPress installation in the 'template' folder.\n\n" +
+                                "Required files:\n" +
+                                "• wp-admin/index.php\n" +
+                                "• wp-includes/version.php\n\n" +
+                                "Download WordPress from: https://wordpress.org/download/",
+                                "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            Directory.Delete(sitePath, true);
+                            return;
+                        }
+
                         CopyDirectoryIterative(_templatePath, sitePath);
 
                         string userIniPath = Path.Combine(sitePath, ".user.ini");
@@ -2812,6 +2838,8 @@ error_reporting = E_ALL";
                     Log("   Restarting web server...");
                     await DelayAsync(500);
 
+                    EnsurePhpIni();
+
                     Log($"   Starting PHP-CGI {_currentPhpVersion}...");
                     StartProcessWithEnv(_phpCgiPath, $"-b 127.0.0.1:{Config.PhpPort} -c \"{_phpIni}\"", _phpWorkingDir);
                     await DelayAsync(Config.ProcessStartDelay);
@@ -3120,10 +3148,10 @@ error_reporting = E_ALL";
             {
                 Directory.CreateDirectory(dest);
 
-                // Використовуємо ітеративний підхід замість рекурсивного
                 var stack = new Stack<(string Source, string Dest)>();
                 stack.Push((source, dest));
 
+                int fileCount = 0;
                 while (stack.Count > 0)
                 {
                     var (src, dst) = stack.Pop();
@@ -3132,6 +3160,9 @@ error_reporting = E_ALL";
                     foreach (var file in Directory.GetFiles(src))
                     {
                         File.Copy(file, Path.Combine(dst, Path.GetFileName(file)), true);
+                        fileCount++;
+                        if (fileCount % 100 == 0)
+                            LogToFile($"   Copied {fileCount} files...");
                     }
 
                     foreach (var dir in Directory.GetDirectories(src))
@@ -3208,8 +3239,9 @@ error_reporting = E_ALL";
     public class SoftButton : Button
     {
         private bool _isHovered = false, _isPressed = false;
-        private ButtonStyle _style;
-        private float _dpiScale;
+        private readonly ButtonStyle _style;
+        private readonly float _dpiScale;
+        private readonly Action<AppTheme> _themeHandler;
 
         public SoftButton(string text, ButtonStyle style = ButtonStyle.Default, float dpiScale = 1.0f)
         {
@@ -3228,7 +3260,16 @@ error_reporting = E_ALL";
             this.MouseLeave += (s, e) => { _isHovered = false; _isPressed = false; Invalidate(); };
             this.MouseDown += (s, e) => { _isPressed = true; Invalidate(); };
             this.MouseUp += (s, e) => { _isPressed = false; Invalidate(); };
-            ThemeManager.ThemeChanged += (theme) => Invalidate();
+
+            _themeHandler = (theme) => Invalidate();
+            ThemeManager.ThemeChanged += _themeHandler;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                ThemeManager.ThemeChanged -= _themeHandler;
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs pevent)
@@ -3236,7 +3277,7 @@ error_reporting = E_ALL";
             try
             {
                 pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                pevent.Graphics.Clear(this.Parent.BackColor);
+                pevent.Graphics.Clear(this.Parent?.BackColor ?? SystemColors.Control);
                 Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
                 int r = (int)(8 * _dpiScale);
                 var scheme = ThemeManager.CurrentScheme;
@@ -3269,15 +3310,30 @@ error_reporting = E_ALL";
     // =========================
     public class ModernCard : Panel
     {
-        private float _dpiScale;
+        private readonly float _dpiScale;
+        private readonly Action<AppTheme> _themeHandler;
+
         public ModernCard(int x, int y, int w, int h, float dpiScale = 1.0f)
         {
-            this._dpiScale = dpiScale;
+            _dpiScale = dpiScale;
             this.Location = new Point(x, y);
             this.Size = new Size(w, h);
             this.BackColor = ThemeManager.CurrentScheme.BackgroundCard;
             this.Padding = new Padding(1);
-            ThemeManager.ThemeChanged += (theme) => { this.BackColor = ThemeManager.CurrentScheme.BackgroundCard; this.Invalidate(); };
+
+            _themeHandler = (theme) =>
+            {
+                this.BackColor = ThemeManager.CurrentScheme.BackgroundCard;
+                this.Invalidate();
+            };
+            ThemeManager.ThemeChanged += _themeHandler;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                ThemeManager.ThemeChanged -= _themeHandler;
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
