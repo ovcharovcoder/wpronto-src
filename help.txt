@@ -4,9 +4,61 @@
 ═══════════════════════════════════════════════════════════════
 
 Version: 4.0
-Release  Date: June 21, 2026
+Release  Date: June 25, 2026
 Website: https://ovcharovcoder.github.io/wpronto
 Author:  Andrii Ovcharov
+
+
+═══════════════════════════════════════════════════════════════
+                    ⚠️  IMPORTANT SECURITY WARNING  ⚠️
+═══════════════════════════════════════════════════════════════
+
+    🔒 WPronto is designed for LOCAL DEVELOPMENT ONLY!
+
+    ┌─────────────────────────────────────────────────────────────
+    │                                                             
+    │  ❌ DO NOT use WPronto on public servers                   
+    │  ❌ DO NOT use WPronto on VPS or hosting                   
+    │  ❌ DO NOT use WPronto with internet access                
+    │  ❌ DO NOT expose WPronto to external networks             
+    │                                                             
+    │  ✅ ONLY use WPronto on your LOCAL PC for DEVELOPMENT      
+    │                                                             
+    └─────────────────────────────────────────────────────────────
+
+    ⚡ CRITICAL SECURITY ISSUES:
+
+    ┌─────────────────────────────────────────────────────────────
+    │ 1. MySQL has NO PASSWORD for root user!                   
+    │    → Anyone on your network can access your databases     
+    │    → No authentication required for database access       
+    │                                                             
+    │ 2. Nginx is configured for development, not production    
+    │    → Security headers are not enforced                   
+    │    → Error details are exposed in browser                
+    │    → No rate limiting or brute force protection          
+    │                                                             
+    │ 3. WordPress sites are accessible to entire local network
+    │    → http://your-site.wp is available to all connected   
+    │    → No IP restrictions or firewall rules                
+    │                                                             
+    │ 4. PHP is in development mode                            
+    │    → display_errors = On (exposes code paths)           
+    │    → Error reporting shows full details                  
+    │    → No opcode caching for security                     
+    └─────────────────────────────────────────────────────────────
+
+    📌 RECOMMENDATIONS:
+
+    ✓ Always use WPronto on a trusted local network ONLY
+    ✓ Never port-forward or expose WPronto to the internet
+    ✓ Use a firewall to block external access to ports 80, 8080, 3306
+    ✓ For production websites, use a proper hosting provider
+    ✓ Consider using a VPN for remote development access
+
+    💡 REMEMBER: WPronto prioritizes developer convenience 
+       over security. It is a DEVELOPMENT TOOL, not a 
+       PRODUCTION SERVER. Use it responsibly!
 
 
 ═══════════════════════════════════════════════════════════════
