@@ -187,6 +187,7 @@ namespace WPLaunchGUI
         public const string TimeZone = "Europe/Kyiv";
         public const int ProcessStartDelay = 2000;
         public const int NginxStartDelay = 3000;
+        public const int PhpMyAdminPort = 8080;
     }
 
     public partial class Form1 : Form
@@ -245,6 +246,8 @@ namespace WPLaunchGUI
 
         private const int MAX_LOG_LINES = 1000;
         private const int STATUS_CHECK_INTERVAL_MS = 10000;
+        private int _logTrimCounter = 0;
+        private const int LOG_TRIM_THRESHOLD = 100;
 
         // =========================
         // CONSTRUCTOR
@@ -337,9 +340,8 @@ namespace WPLaunchGUI
         {
             try
             {
-                Log($"ERROR in {context}: {ex.Message}");
-                Log($"Stack: {ex.StackTrace}");
-                LogToFile($"ERROR: {ex}");
+                Log($"❌ ERROR in {context}: {ex.Message}");
+                LogToFile($"ERROR [{context}]: {ex}");
             }
             catch { }
         }
@@ -676,7 +678,7 @@ fastcgi.logging = 0
         "    }\n\n" +
         "    # phpMyAdmin on separate port\n" +
         "    server {\n" +
-        $"        listen       8080;\n" +
+        $"        listen       {Config.PhpMyAdminPort};\n" +
         "        server_name  localhost;\n" +
         $"        root         \"{basePathUnix}/core/phpmyadmin\";\n" +
         "        index        index.php;\n\n" +
@@ -697,10 +699,9 @@ fastcgi.logging = 0
                 File.WriteAllText(_nginxConf, nginxConfig, Encoding.ASCII);
                 LogToFile($"nginx.conf created at: {_nginxConf}");
 
-                if (!File.Exists(_mysqlConfPath))
-                {
-                    string mysqlDataUnix = _mysqlData.Replace("\\", "/");
-                    string myIniContent = $@"[mysqld]
+                // Always rewrite my.ini to use current paths
+                string mysqlDataUnix = _mysqlData.Replace("\\", "/");
+                string myIniContent = $@"[mysqld]
 port={Config.MysqlPort}
 basedir=""{basePathUnix}/core/mysql""
 datadir=""{mysqlDataUnix}""
@@ -709,9 +710,8 @@ innodb_log_file_size=128M
 innodb_flush_log_at_trx_commit=2
 sync_binlog=0
 ";
-                    File.WriteAllText(_mysqlConfPath, myIniContent, Encoding.ASCII);
-                    LogToFile($"Created my.ini at: {_mysqlConfPath}");
-                }
+                File.WriteAllText(_mysqlConfPath, myIniContent, Encoding.ASCII);
+                LogToFile($"Updated my.ini at: {_mysqlConfPath}");
 
                 string userIniContent = $"upload_max_filesize = {Config.UploadMaxSize}M\npost_max_size = {Config.UploadMaxSize}M\nmemory_limit = {Config.MemoryLimit}M\nmax_execution_time = 600\nmax_input_time = 600";
 
@@ -1324,7 +1324,7 @@ sync_binlog=0
                 CheckServerStatus();
                 Log("Web server restarted. MySQL connection preserved.");
                 Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/ - WordPress");
-                Log($"   http://localhost:8080/ - phpMyAdmin");
+                Log($"   http://localhost:{Config.PhpMyAdminPort}/ - phpMyAdmin");
             }
             catch (Exception ex)
             {
@@ -1616,6 +1616,12 @@ sync_binlog=0
                     _webPort = Config.AlternativePort;
                     LogToFile($"Port {Config.DefaultPort} is busy, using alternative port: {_webPort}");
                 }
+
+                // Check phpMyAdmin port
+                if (!IsPortAvailable(Config.PhpMyAdminPort))
+                {
+                    LogToFile($"WARNING: Port {Config.PhpMyAdminPort} (phpMyAdmin) is busy!");
+                }
             }
             catch (Exception ex)
             {
@@ -1624,7 +1630,7 @@ sync_binlog=0
         }
 
         // =========================
-        // LOGGING
+        // LOGGING (FIXED - with optimization)
         // =========================
         private void Log(string message)
         {
@@ -1645,8 +1651,11 @@ sync_binlog=0
                 string logMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
                 txtLog.AppendText(logMessage + Environment.NewLine);
 
-                if (txtLog.Lines.Length > MAX_LOG_LINES)
+                // Optimize: trim only every LOG_TRIM_THRESHOLD messages
+                _logTrimCounter++;
+                if (_logTrimCounter >= LOG_TRIM_THRESHOLD && txtLog.Lines.Length > MAX_LOG_LINES + 100)
                 {
+                    _logTrimCounter = 0;
                     var lines = txtLog.Lines;
                     var newLines = new string[MAX_LOG_LINES];
                     Array.Copy(lines, lines.Length - MAX_LOG_LINES, newLines, 0, MAX_LOG_LINES);
@@ -1974,15 +1983,22 @@ sync_binlog=0
         }
 
         // =========================
-        // SERVER STATUS
+        // SERVER STATUS (FIXED)
         // =========================
         private void CheckServerStatus()
         {
             try
             {
+                // Check InvokeRequired first
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(CheckServerStatus));
+                    return;
+                }
+
                 bool running = IsProcessRunning("nginx") && IsProcessRunning("php-cgi") && IsProcessRunning("mysqld");
-                if (this.InvokeRequired) { this.Invoke(new Action(CheckServerStatus)); return; }
                 var scheme = ThemeManager.CurrentScheme;
+
                 if (running)
                 {
                     lblStatus.Text = "● SERVER RUNNING";
@@ -2033,7 +2049,7 @@ sync_binlog=0
         }
 
         // =========================
-        // START SERVER
+        // START SERVER (FIXED)
         // =========================
         private async void BtnStart_Click(object sender, EventArgs e)
         {
@@ -2044,6 +2060,13 @@ sync_binlog=0
                 if (IsProcessRunning("nginx") && IsProcessRunning("php-cgi") && IsProcessRunning("mysqld"))
                 {
                     Log("Server is already running!");
+                    return;
+                }
+
+                // Validate pre-startup ALWAYS, regardless of MySQL state
+                if (!await ValidatePreStartupAsync())
+                {
+                    Log("Server startup validation failed!");
                     return;
                 }
 
@@ -2061,16 +2084,6 @@ sync_binlog=0
                 if (!IsProcessRunning("mysqld"))
                 {
                     Log("MySQL is not running, starting...");
-
-                    if (!await ValidatePreStartupAsync())
-                    {
-                        Log("Server startup validation failed!");
-                        return;
-                    }
-
-                    Log($"Starting services with PHP {_currentPhpVersion}...");
-                    Log($"Nginx version: {GetNginxVersion()}");
-                    Log($"Using port: {_webPort}");
 
                     string mysqlDataUnix = _mysqlData.Replace("\\", "/");
 
@@ -2147,7 +2160,7 @@ sync_binlog=0
 
                 Log($"Server is running with PHP {_currentPhpVersion}!");
                 Log($"   http://localhost:{(_webPort == 80 ? "" : _webPort.ToString())}/ - WordPress");
-                Log($"   http://localhost:8080/ - phpMyAdmin");
+                Log($"   http://localhost:{Config.PhpMyAdminPort}/ - phpMyAdmin");
                 Log($"   Max upload size: {Config.UploadMaxSize}MB");
             }
             catch (Exception ex)
@@ -2187,7 +2200,7 @@ sync_binlog=0
         {
             try
             {
-                string url = $"http://localhost:8080/";
+                string url = $"http://localhost:{Config.PhpMyAdminPort}/";
                 try
                 {
                     Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
@@ -2206,7 +2219,7 @@ sync_binlog=0
         }
 
         // =========================
-        // CREATE SITE
+        // CREATE SITE (FIXED)
         // =========================
         private async void BtnCreateSite_Click(object sender, EventArgs e)
         {
@@ -2215,6 +2228,14 @@ sync_binlog=0
                 string siteName = Microsoft.VisualBasic.Interaction.InputBox("Enter site name (letters, numbers, hyphens):", "Create New Site", "mynewsite");
                 if (string.IsNullOrWhiteSpace(siteName)) return;
                 siteName = Regex.Replace(siteName, @"[^a-zA-Z0-9\-]", "").ToLower();
+
+                // FIXED: Check if site name is empty after filtering
+                if (string.IsNullOrEmpty(siteName))
+                {
+                    MessageBox.Show("Site name cannot be empty after removing invalid characters.\nUse only letters, numbers, hyphens.",
+                        "WPronto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
                 bool isPhpOnlyMode = (siteName == "php");
 
@@ -2653,7 +2674,7 @@ error_reporting = E_ALL";
         }
 
         // =========================
-        // RESTORE FROM BACKUP
+        // RESTORE FROM BACKUP (FIXED)
         // =========================
         private async Task RestoreFromBackup(string siteName, BackupInfo backup)
         {
@@ -2786,8 +2807,22 @@ error_reporting = E_ALL";
 
                     if (importProcess != null)
                     {
-                        importProcess.WaitForExit(timeoutMs);
+                        // FIXED: Check if process finished within timeout
+                        bool finished = importProcess.WaitForExit(timeoutMs);
                         double elapsedSeconds = (DateTime.Now - startTime).TotalSeconds;
+
+                        if (!finished)
+                        {
+                            Log($"   Import timeout after {timeoutMs / 1000} sec — process still running");
+                            // Don't kill the process - let it complete naturally
+                            await DelayAsync(1000);
+                            // Check again after a short delay
+                            if (!importProcess.HasExited)
+                            {
+                                Log($"   Import still running, waiting longer...");
+                                importProcess.WaitForExit();
+                            }
+                        }
 
                         if (importProcess.ExitCode == 0)
                         {

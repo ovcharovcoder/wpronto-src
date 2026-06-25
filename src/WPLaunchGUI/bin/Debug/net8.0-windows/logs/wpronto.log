@@ -377,3 +377,21 @@
 2026-06-23 14:57:56 - Hosts file modification will not work!
 2026-06-23 14:57:56 - Virtual domains like site.wp will not resolve!
 2026-06-23 14:57:56 - Please restart the program as Administrator for full functionality
+2026-06-25 11:42:08 - Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-25 11:42:11 - Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-25 11:42:11 - nginx.conf created at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-25 11:42:11 - Updated my.ini at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\config\mysql\my.ini
+2026-06-25 11:42:11 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-25 11:42:11 - NOT RUNNING AS ADMINISTRATOR!
+2026-06-25 11:42:11 - Hosts file modification will not work!
+2026-06-25 11:42:11 - Virtual domains like site.wp will not resolve!
+2026-06-25 11:42:11 - Please restart the program as Administrator for full functionality
+2026-06-25 12:01:28 - Base path initialized to: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows
+2026-06-25 12:01:30 - Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-25 12:01:30 - nginx.conf created at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-25 12:01:30 - Updated my.ini at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\config\mysql\my.ini
+2026-06-25 12:01:30 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-25 12:01:30 - NOT RUNNING AS ADMINISTRATOR!
+2026-06-25 12:01:30 - Hosts file modification will not work!
+2026-06-25 12:01:30 - Virtual domains like site.wp will not resolve!
+2026-06-25 12:01:30 - Please restart the program as Administrator for full functionality
