@@ -1,0 +1,92 @@
+2026-06-03 18:34:47 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 18:34:51 - 🎨 Theme changed to: System
+2026-06-03 18:37:49 - 🎨 Theme changed to: Light
+2026-06-03 18:37:50 - 🎨 Theme changed to: Dark
+2026-06-03 18:37:52 - 🎨 Theme changed to: System
+2026-06-03 18:40:12 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 18:40:46 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 18:53:39 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:02:12 - Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:03:40 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:10:14 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:11:09 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:12:03 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:12:19 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:12:30 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:12:41 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:13:06 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:13:20 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:13:34 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:15:34 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:20:27 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:23:25 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 19:24:12 - 🎨 Theme changed to: Light
+2026-06-03 19:24:13 - 🎨 Theme changed to: Dark
+2026-06-03 19:24:23 - 🎨 Theme changed to: System
+2026-06-03 20:13:37 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 20:13:37 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
+2026-06-03 20:19:57 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 20:21:52 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 20:24:20 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 20:45:21 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 22:07:16 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 22:07:16 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
+2026-06-03 22:54:41 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-03 22:54:41 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
+2026-06-04 06:00:37 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-04 06:01:13 - Stopping services...
+2026-06-04 06:01:13 - ⏹️ All services stopped
+2026-06-04 06:01:14 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-04 06:01:14 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-04 06:01:14 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-04 06:01:14 - ❌ Required files missing. Please check installation.
+2026-06-04 06:01:36 - Stopping services...
+2026-06-04 06:01:36 - ⏹️ All services stopped
+2026-06-04 06:01:37 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-04 06:01:37 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-04 06:01:37 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-04 06:01:37 - ❌ Required files missing. Please check installation.
+2026-06-04 06:02:05 - Opening phpMyAdmin: http://localhost/phpmyadmin
+2026-06-04 06:27:56 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-04 06:31:29 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-04 06:48:13 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-04 07:37:15 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-04 07:37:15 - ⚠️ Port 80 is busy, using alternative ports: 8080 and 8081
+2026-06-04 07:37:19 - Stopping services...
+2026-06-04 07:37:19 - ✓ Stopped nginx
+2026-06-04 07:37:19 - ✓ Stopped nginx
+2026-06-04 07:37:19 - ✓ Stopped php-cgi
+2026-06-04 07:37:19 - ✓ Stopped mysqld
+2026-06-04 07:37:19 - ⏹️ All services stopped
+2026-06-06 22:02:37 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-06 22:02:37 - ✅ nginx.conf created with dynamic paths
+2026-06-06 22:02:37 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-06 22:08:49 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-06 22:08:49 - ✅ nginx.conf created with dynamic paths
+2026-06-06 22:08:49 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-07 10:43:46 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-07 10:43:46 - ✅ nginx.conf created with dynamic paths
+2026-06-07 10:43:47 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-07 11:15:32 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-07 11:15:32 - ✅ nginx.conf created with RELATIVE paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-07 11:15:32 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-07 11:46:57 - ✅ nginx.conf created with ABSOLUTE dynamic paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-07 11:46:57 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-07 12:22:19 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-07 12:22:19 - ✅ nginx.conf created with ABSOLUTE dynamic paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-07 12:22:19 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-07 22:09:40 - 🔄 Old nginx.conf with absolute paths removed, creating fresh one...
+2026-06-07 22:09:40 - ✅ nginx.conf created with ABSOLUTE dynamic paths at: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\conf\nginx.conf
+2026-06-07 22:09:40 - ⚠️ Warning: Template folder doesn't look like a valid WordPress installation
+2026-06-07 22:09:44 - Stopping services...
+2026-06-07 22:09:44 - ⏹️ All services stopped
+2026-06-07 22:09:45 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-07 22:09:45 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-07 22:09:45 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-07 22:09:45 - ❌ Required files missing. Please check installation.
+2026-06-07 22:10:03 - Stopping services...
+2026-06-07 22:10:03 - ⏹️ All services stopped
+2026-06-07 22:10:04 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\nginx\nginx.exe
+2026-06-07 22:10:04 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\php\php83\php-cgi.exe
+2026-06-07 22:10:04 - ❌ Missing: C:\WPronto\src\WPLaunchGUI\bin\Debug\net8.0-windows\core\mysql\bin\mysqld.exe
+2026-06-07 22:10:04 - ❌ Required files missing. Please check installation.
