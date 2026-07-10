@@ -1,6 +1,0 @@
-C:\WPronto\publish\WProntoGUI.exe
-C:\WPronto\publish\app.ico
-C:\WPronto\publish\WProntoGUI.dll
-C:\WPronto\publish\WProntoGUI.deps.json
-C:\WPronto\publish\WProntoGUI.runtimeconfig.json
-C:\WPronto\publish\WProntoGUI.pdb
