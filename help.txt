@@ -3,8 +3,8 @@
         Fast, Simple & Powerful Local WordPress Environment
 ═══════════════════════════════════════════════════════════════
 
-Version: 4.0
-Release  Date: June 25, 2026
+Version: 5.0
+Release Date: July 09, 2026
 Website: https://ovcharovcoder.github.io/wpronto
 Author:  Andrii Ovcharov
 
@@ -73,6 +73,9 @@ no manual configuration, no hosting required.
 Additionally, WPronto features a special PHP Learning Mode for developers
 who want to learn PHP or build pure PHP applications without WordPress.
 
+⚡ NEW in v5.0: Share your local sites via built-in Ngrok tunnel!
+   Create instant public URLs for client demos without port forwarding!
+
 
 ═══════════════════════════════════════════════════════════════
                          INSTALLED COMPONENTS
@@ -83,6 +86,7 @@ who want to learn PHP or build pure PHP applications without WordPress.
 • Nginx             : 1.30.2
 • phpMyAdmin        : 5.2.3
 • MySQL (MariaDB)   : 11.4.2
+• Ngrok             : 3.39
 
 
 ═══════════════════════════════════════════════════════════════
@@ -105,6 +109,13 @@ who want to learn PHP or build pure PHP applications without WordPress.
 ✅ Development mode with error reporting enabled
 ✅ Detailed status bar with real-time server information
 ✅ Enhanced logging with file output for debugging
+✅ SHARE YOUR SITE VIA NGROK TUNNEL – NEW in v5.0!
+   → Instant public URL for client demos
+   → No port forwarding or firewall configuration needed
+   → Auto-copies URL to clipboard
+   → One-click refresh for new URL
+   → One-click close access
+   → Ngrok built-in, ready to use! No download required!
 
 
 ═══════════════════════════════════════════════════════════════
@@ -114,19 +125,26 @@ who want to learn PHP or build pure PHP applications without WordPress.
 Control WPronto entirely from your keyboard! All hotkeys use 
 Ctrl+Shift+[Key] to avoid conflicts with system shortcuts.
 
-┌─────────────────────────────────────────────────────────────────
-│ HOTKEY              │ ACTION                                
-├─────────────────────────────────────────────────────────────────
+┌─────────────────────────────────────────────────────────────────────
+│ HOTKEY              │ ACTION                                    
+├─────────────────────────────────────────────────────────────────────
 │ Ctrl + Shift + S    │ Start Server                              
-│ Ctrl + Shift + X    │ Stop Server                             
-│ Ctrl + Shift + R    │ Restart Server (v4.0 new!)               
-│ Ctrl + Shift + A    │ Open Admin (WordPress dashboard)       
+│ Ctrl + Shift + X    │ Stop Server                               
+│ Ctrl + Shift + R    │ Restart Server                           
 │ Ctrl + Shift + P    │ Open phpMyAdmin                          
-│ Ctrl + Shift + C    │ Create New Site                         
-│ Ctrl + Shift + B    │ Backup Selected Site                      
+│ Ctrl + Shift + C    │ Create New Site                          
+│ Ctrl + Shift + B    │ Backup Selected Site                     
 │ Ctrl + Shift + F    │ Restore from Backup                      
-│ Ctrl + Shift + D    │ Delete Selected Site                      
-└─────────────────────────────────────────────────────────────────
+│ Ctrl + Shift + D    │ Delete Selected Site                     
+│─────────────────────────────────────────────────────────────────────
+│ Ctrl + Shift + A    │ Open Admin (WordPress dashboard)         
+│ Ctrl + Shift + O    │ Open Project Folder                      
+│ Ctrl + Shift + G    │ Open Backup Folder                       
+│─────────────────────────────────────────────────────────────────────
+│ Ctrl + Shift + T    │ Share Site (start ngrok tunnel)          
+│ Ctrl + Shift + U    │ Refresh Tunnel (get new URL)             
+│ Ctrl + Shift + W    │ Close Sharing (stop tunnel)              
+└─────────────────────────────────────────────────────────────────────
 
 💡 TIP: You don't need to remember all hotkeys - the buttons will
    still work with mouse clicks, and the shortcuts are just for
@@ -180,6 +198,81 @@ FILE LOCATION
 
 
 ═══════════════════════════════════════════════════════════════
+                    SHARE YOUR SITE WITH CLIENTS – NEW!
+═══════════════════════════════════════════════════════════════
+
+WHAT IS NGROK TUNNEL?
+
+   Ngrok creates a secure, public URL for your local WordPress site.
+   Share your work with clients, team members, or stakeholders WITHOUT:
+   • Port forwarding
+   • Firewall configuration
+   • Static IP address
+   • DNS setup
+   • Exposing your local network
+
+   ⚡ BONUS: Ngrok is built into WPronto v5.0! No download needed!
+
+HOW IT WORKS
+
+   ┌─────────────────────────────────────────────────────────────
+   │ 1. Start your server (Start button or Ctrl+Shift+S)       
+   │ 2. Right-click a site in the list                         
+   │ 3. Select "🔗 Share" from the context menu                
+   │    OR press Ctrl+Shift+T for instant sharing!             
+   │ 4. WPronto automatically:                                 
+   │    • Creates a secure tunnel via ngrok                    
+   │    • Generates a public URL (e.g., https://abc123.ngrok-free.app)
+   │    • Copies the URL to your clipboard                     
+   │ 5. Send the URL to your client – they can view your site!  
+   └─────────────────────────────────────────────────────────────
+
+NGROK AUTHENTICATION – ONE-TIME SETUP
+
+   The first time you use the Share feature, WPronto will ask for
+   your ngrok auth token (free from ngrok.com):
+   
+   1. Go to https://dashboard.ngrok.com/signup
+   2. Create a free account
+   3. Get your auth token from https://dashboard.ngrok.com/auth
+   4. Enter the token in WPronto when prompted
+   5. Your token is saved – you won't be asked again!
+
+   Without an auth token, ngrok won't work!
+
+MANAGING YOUR SHARED SITE
+
+   • 🔄 Refresh – Get a new public URL (Ctrl+Shift+U)
+   • 🔒 Close – Immediately stop sharing and close the tunnel (Ctrl+Shift+W)
+   • Status indicator shows: Active, Starting, or Inactive
+   • URL is displayed in the UI and auto-copied to clipboard
+
+IMPORTANT NOTES FOR SHARING
+
+   ⚠️ WordPress URL Issue:
+   WordPress stores absolute URLs in the database. When accessing
+   via the public URL, WordPress may redirect to your local URL.
+   
+   ✅ FIXED in v5.0! WPronto automatically handles URL rewriting:
+   • The WordPress "Site Address" is automatically updated
+   • Images and resources are served correctly
+   • No manual configuration needed!
+   
+   For PHP Learning Mode sites, this is not an issue.
+
+   🔒 Security Tips:
+   • Only share with trusted clients/stakeholders
+   • Close the tunnel after the review is complete
+   • The tunnel provides HTTPS encryption automatically
+   • Your local network remains secure and unexposed
+
+   📊 Usage Limits:
+   • Ngrok free tier: 40 connections/minute
+   • Speed depends on your internet upload speed
+   • Works best for demonstrations and client reviews
+
+
+═══════════════════════════════════════════════════════════════
                     DEVELOPMENT MODE FEATURES
 ═══════════════════════════════════════════════════════════════
 
@@ -214,42 +307,66 @@ DATABASE MANAGEMENT
    For WordPress sites: Database is created automatically
    For PHP Learning Mode: Create databases manually via phpMyAdmin
    • Open phpMyAdmin: http://localhost/phpmyadmin (or press Ctrl+Shift+P)
-   • Create any database you need
    • User: root, no password
 
 
 ═══════════════════════════════════════════════════════════════
-                         WHAT'S NEW IN v4.0
+                         WHAT'S NEW IN v5.0
 ═══════════════════════════════════════════════════════════════
 
-🔄 ONE-CLICK SERVER RESTART
-   No more stop → wait → start. Just click "Restart" button or press
-   Ctrl+Shift+R. Perfect for applying configuration changes quickly.
+🌍 NGROK TUNNEL INTEGRATION
+   Share your local WordPress sites with anyone in the world!
+   • Create instant public URLs for client demos
+   • No port forwarding required
+   • One-click share, refresh, and close
+   • Ngrok built-in – no download needed!
 
-🖱️ DOUBLE-CLICK TO OPEN ADMIN
-   Simply double-click any site in the list to instantly open its
-   WordPress admin panel. No more extra clicks!
+⚡ BUILT-IN NGROK
+   • No more waiting for downloads!
+   • ngrok.exe included in the installation
+   • Ready to use immediately
+   • Faster startup time
 
-📂 RIGHT-CLICK CONTEXT MENU
-   Right-click any site for quick access to:
-   • Open Admin
-   • Open Folder (in Explorer)
-   • Backup
-   • Restore
-   • Delete
+🔄 INSTANT SITE SHARING
+   Right-click any site → "Share" → Get public URL instantly
+   Perfect for:
+   • Client demonstrations
+   • Team collaboration
+   • Stakeholder reviews
+   • Testing on different devices
+   • Remote debugging
 
-⚡ IMPROVED Nginx RELOAD
-   Configuration changes (like creating a new site) now reload Nginx
-   without any downtime. Your other sites stay accessible!
+🔒 SECURE BY DEFAULT
+   • HTTPS encryption automatically provided
+   • Tunnel closes when you close WPronto
+   • No exposure of your local network
+   • Temporary URLs that can be revoked anytime
 
-🔒 SMART PORT DETECTION
-   WPronto now detects if port 3306 (MySQL) is busy and warns you
-   before starting. No more crashes from conflicts with XAMPP/Laragon.
+📋 AUTO-COPY TO CLIPBOARD
+   When you share a site, the public URL is automatically
+   copied to your clipboard. Just paste and send!
 
-⌨️ EXPANDED HOTKEYS
-   New shortcuts added for faster workflow:
-   • Ctrl+Shift+R – Restart Server
-   • Ctrl+Shift+F – Restore from Backup
+🔄 REFRESH TUNNEL
+   One-click refresh to get a new public URL (Ctrl+Shift+U)
+   Useful when:
+   • The URL expires (ngrok free tier)
+   • You want to reset the tunnel
+   • You need a fresh URL for a new client
+
+🔒 CLOSE ACCESS
+   Instantly close the tunnel and stop sharing (Ctrl+Shift+W)
+   Your site remains running locally but is no longer public
+
+🌐 FULL LOCALIZATION
+   • Complete Ukrainian language support
+   • One-click language switching
+   • All UI elements, messages, and logs translated
+   • Automatic language detection
+
+🎨 IMPROVED UI
+   • Cleaner button design (no icons on buttons)
+   • Icons only in context menus
+   • Better visual separation of elements
 
 
 ═══════════════════════════════════════════════════════════════
@@ -279,12 +396,12 @@ DATABASE MANAGEMENT
 
 🔄 HOW TO RESTORE A BACKUP (AUTOMATIC METHOD)
 
-   WPronto v3.0 features FULLY AUTOMATIC one-click restore!
+   WPronto features FULLY AUTOMATIC one-click restore!
 
    METHOD 1: Site exists in the list
    ┌─────────────────────────────────────────────────────────────
    │ 1. Select the site from the left panel                    
-   │ 2. Click the orange "Restore" button (or Ctrl+Shift+R)     
+   │ 2. Click the orange "Restore" button (or Ctrl+Shift+F)     
    │ 3. Choose which backup version to restore                  
    │ 4. Confirm the operation                                  
    │ 5. Done! Files and database are restored automatically     
@@ -329,12 +446,14 @@ Minimum:
 • .NET Runtime     : .NET 8.0 Desktop Runtime
 • Disk Space       : 2GB free space (700MB core + space for sites)
 • RAM              : 8GB
+• Internet         : Required only for ngrok tunnel feature
 
 Recommended:
 • RAM              : 16GB (for multiple sites)
 • CPU              : 4+ cores
 • Display          : 1920x1080 or higher (for best DPI experience)
 • Disk Space       : 10GB+ for multiple sites and backups
+• Internet         : Stable connection for sharing feature
 
 
 ═══════════════════════════════════════════════════════════════
@@ -365,18 +484,23 @@ Recommended:
    http://your-site.wp/wp-admin/install.php
    Fill in your site details and complete the installation.
 
-4. BACKUP YOUR SITE
+4. SHARE YOUR SITE WITH CLIENTS (NEW!)
+   Right-click the site → "Share" (or press Ctrl+Shift+T) → Get public URL instantly
+   Send the URL to your client – they can view your site from anywhere!
+   Learn more in the "Share Your Site with Clients" section above.
+
+5. BACKUP YOUR SITE
    Select a site from the list → Click "Backup" button (or press Ctrl+Shift+B)
    A full copy of files and database will be saved to:
    WPronto\backups\your-site-name\YYYY-MM-DD_HH-MM-SS\
 
-5. RESTORE YOUR SITE
+6. RESTORE YOUR SITE
    Select a site (or click Restore without selection)
-   Click "Restore" button (or press Ctrl+Shift+R)
+   Click "Restore" button (or press Ctrl+Shift+F)
    Choose which backup version to restore
    Click "Restore" and confirm – done!
 
-6. DEVELOP YOUR CODE
+7. DEVELOP YOUR CODE
    
    FOR WORDPRESS:
       • Access admin: http://your-site.wp/wp-admin (or Ctrl+Shift+A)
@@ -390,7 +514,7 @@ Recommended:
       • See all PHP errors in browser
       • No WordPress overhead – just pure PHP!
 
-7. MANAGE SITES (Mouse or Keyboard).
+8. MANAGE SITES (Mouse or Keyboard)
 
 
 ═══════════════════════════════════════════════════════════════
@@ -407,6 +531,7 @@ Recommended:
 │ Best for           │ WordPress dev       │ Learning PHP / APIs  
 │ URL                │ your-site.wp        │ php.wp               
 │ File location      │ www/your-site/      │ www/php/             
+│ Ngrok Share        │ ✓ Supported         │ ✓ Supported          
 └─────────────────────────────────────────────────────────────
 
 
@@ -419,6 +544,7 @@ WPronto\
 ├── config\         (Nginx & PHP configuration files)
 ├── data\           (MySQL databases storage)
 ├── template\       (WordPress template for new sites)
+├── tools\          (Ngrok for sharing feature) ← NEW!
 ├── www\            (Your WordPress sites folders)
 │   ├── default\    (Default localhost site)
 │   ├── php\        (PHP Learning Mode site – pure PHP)
@@ -462,8 +588,43 @@ WPronto\
    → Verify index.php has <?php tag
    → Restart the server after creating
 
+❌ Ngrok Tunnel not working (Share feature)
+   → Make sure you have internet connection
+   → Check that the server is running (Start button)
+   → Verify ngrok.exe exists in WPronto\tools\
+   → WPronto v5.0 includes ngrok – no download needed!
+   → Check Windows Firewall – allow ngrok.exe
+   → Try Ctrl+Shift+U to Refresh to get a new URL
+   → Try Ctrl+Shift+W to Close and restart sharing
+   → Sign up for free account at ngrok.com
+   → Get your auth token from dashboard.ngrok.com/auth
+   → Enter token in WPronto when prompted
+
+❌ Shared URL redirects to localhost
+   → FIXED in v5.0! WPronto automatically handles URL rewriting
+   → For older sites, add to wp-config.php:
+   → define('WP_HOME', 'https://your-tunnel-url');
+   → define('WP_SITEURL', 'https://your-tunnel-url');
+
+❌ Client can't access shared URL
+   → Ensure the tunnel is Active (green status)
+   → Check that your internet is working
+   → Try Ctrl+Shift+U to Refresh to get a new URL
+   → Make sure you copied the full URL including https://
+
+❌ Tunnel closes unexpectedly
+   → Ngrok free tier has session limits
+   → Use Ctrl+Shift+U to Refresh to get a new URL
+   → Check your internet connection stability
+   → Free tier limits: 40 connections/minute
+
+❌ Ngrok asks for auth token every time
+   → Your token should be saved automatically
+   → Check ngrok_token.config in WPronto folder
+   → If missing, enter token again when prompted
+
 ❌ Restore failed with "pipe is being closed"
-   → This is fixed in v3.0 – automatic restore works now
+   → This is fixed – automatic restore works now
    → If still occurs, use Manual Restore method in backup guide
 
 ❌ Restored site not showing in list
